@@ -28,7 +28,11 @@ jobs:
 
       - name: Verify Android SDK Installation
         run: |
+          ls -la $ANDROID_SDK_ROOT/cmdline-tools/ || true
           $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --list 2>&1 | head -30 || true
+
+      - name: Accept Android Licenses
+        run: yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses || true
 
       - name: Decode Keystore
         env:
