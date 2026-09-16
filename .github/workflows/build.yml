@@ -18,12 +18,13 @@ jobs:
           java-version: '17'
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
         with:
           api-level: 36
           build-tools: 36.1.0
           ndk: false
           cmake: false
+          cache: true
 
       - name: Decode Keystore
         env:
