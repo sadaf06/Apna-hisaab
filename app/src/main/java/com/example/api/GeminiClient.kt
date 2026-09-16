@@ -101,9 +101,26 @@ object GeminiClient {
         return try {
             val listType = com.squareup.moshi.Types.newParameterizedType(List::class.java, GeminiExpenseItem::class.java)
             val adapter = moshi.adapter<List<GeminiExpenseItem>>(listType)
-            adapter.fromJson(json) ?: emptyList()
+            val items = adapter.fromJson(json) ?: emptyList()
+            items.map { item ->
+                val normCat = com.example.data.CategoryConfig.normalizeCategory(item.category, item.item)
+                item.copy(category = normCat)
+            }
         } catch (e: Exception) {
-            emptyList()
+            // Fallback for legacy string amounts (e.g., "amount":"100" vs 100) — parse manually
+            try {
+                val arr = org.json.JSONArray(json)
+                (0 until arr.length()).mapNotNull { i ->
+                    val obj = arr.getJSONObject(i)
+                    val item = obj.optString("item", "")
+                    val amountStr = obj.optString("amount", obj.opt("amount")?.toString() ?: "0")
+                    val amount = amountStr.toDoubleOrNull() ?: obj.optDouble("amount", 0.0)
+                    val category = obj.optString("category", "Other")
+                    if (item.isEmpty() && amount == 0.0) null else GeminiExpenseItem(item, amount, com.example.data.CategoryConfig.normalizeCategory(category, item))
+                }
+            } catch (e2: Exception) {
+                emptyList()
+            }
         }
     }
 
@@ -220,7 +237,7 @@ object GeminiClient {
             Mood Rule: Determine "mood" for the overall input and include it in at least the first action. Values: "Khush", "Thaka", "Normal", "Stressed", "Sad".
             
             Constraint:
-            - categories: "Khana", "Ghar Kharch", "Rent/EMI", "Petrol", "Safar", "Masti", "Shopping", "Health", "Padhai", "Personal", "Gift", "Savings", "Pooja", "Recharge", "Other".
+            - categories: "Khana", "Ghar Kharch", "Rent", "EMI", "Petrol", "Safar", "Masti", "Shopping", "Health", "Padhai", "Personal", "Gift", "Savings", "Pooja", "Recharge", "Other".
             - ai_insight: A warm summary line.
             - toastMessage: A short, combined fun summary of all actions (e.g., "₹100 kharch aur ₹500 bachaye!").
             

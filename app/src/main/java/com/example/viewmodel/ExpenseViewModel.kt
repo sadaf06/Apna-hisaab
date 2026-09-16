@@ -320,7 +320,7 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
         db.collection("users").document(uid).get()
             .addOnSuccessListener { snapshot ->
                 if (snapshot != null && snapshot.exists()) {
-                    val budget = snapshot.getDouble("monthlyBudget")
+                    val budget = snapshot.getDouble("monthlyBudget") ?: snapshot.getLong("monthlyBudget")?.toDouble()
                     if (budget != null) {
                         _monthlyBudget.value = budget
                         sharedPrefs.edit().putFloat("monthly_budget", budget.toFloat()).apply()
@@ -383,7 +383,7 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
                             id = doc.id,
                             sourceName = doc.getString("sourceName") ?: doc.getString("source") ?: "",
                             sourceType = doc.getString("sourceType") ?: "Other",
-                            amount = doc.getDouble("amount") ?: 0.0,
+                            amount = doc.getDouble("amount") ?: doc.getLong("amount")?.toDouble() ?: 0.0,
                             type = doc.getString("type") ?: "monthly",
                             createdAt = doc.getTimestamp("createdAt")?.toDate()?.time ?: doc.getLong("createdAt") ?: System.currentTimeMillis()
                         )
@@ -416,8 +416,8 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
                         com.example.data.Goal(
                             id = doc.id,
                             name = doc.getString("name") ?: "",
-                            targetAmount = doc.getDouble("targetAmount") ?: 0.0,
-                            savedAmount = doc.getDouble("savedAmount") ?: 0.0,
+                            targetAmount = doc.getDouble("targetAmount") ?: doc.getLong("targetAmount")?.toDouble() ?: 0.0,
+                            savedAmount = doc.getDouble("savedAmount") ?: doc.getLong("savedAmount")?.toDouble() ?: 0.0,
                             category = doc.getString("category") ?: "",
                             emoji = doc.getString("emoji") ?: "",
                             createdAt = doc.getLong("createdAt") ?: System.currentTimeMillis(),
@@ -467,7 +467,7 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
                             val originalText = doc.getString("originalText") ?: ""
                             val mood = doc.getString("mood") ?: "Normal"
                             val aiInsight = doc.getString("aiInsight") ?: ""
-                            val totalAmount = doc.getDouble("totalAmount") ?: 0.0
+                            val totalAmount = doc.getDouble("totalAmount") ?: doc.getLong("totalAmount")?.toDouble() ?: 0.0
                             val expensesRaw = doc.get("expenses") as? List<Map<String, Any>> ?: emptyList()
                             val expensesList = expensesRaw.map {
                                 val item = it["item"] as? String ?: ""
@@ -630,7 +630,7 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
             db.collection("users").document(uid).get()
                 .addOnSuccessListener { doc ->
                     if (doc.exists()) {
-                        val budget = doc.getDouble("monthlyBudget")
+                        val budget = doc.getDouble("monthlyBudget") ?: doc.getLong("monthlyBudget")?.toDouble()
                         if (budget != null) {
                             _monthlyBudget.value = budget
                             sharedPrefs.edit().putFloat("monthly_budget", budget.toFloat()).apply()
@@ -873,7 +873,7 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
                                     val originalText = doc.getString("originalText") ?: ""
                                     val mood = doc.getString("mood") ?: "Normal"
                                     val aiInsight = doc.getString("aiInsight") ?: ""
-                                    val totalAmount = doc.getDouble("totalAmount") ?: 0.0
+                                    val totalAmount = doc.getDouble("totalAmount") ?: doc.getLong("totalAmount")?.toDouble() ?: 0.0
                                     
                                     val expensesRaw = doc.get("expenses") as? List<Map<String, Any>> ?: emptyList()
                                     val expensesList = expensesRaw.map {
@@ -1535,7 +1535,7 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
                             val moods = mutableListOf<String>()
                             
                             docs.forEach { doc ->
-                                val totalAmount = doc.getDouble("totalAmount") ?: 0.0
+                                val totalAmount = doc.getDouble("totalAmount") ?: doc.getLong("totalAmount")?.toDouble() ?: 0.0
                                 totalSpent += totalAmount
                                 
                                 val mood = doc.getString("mood") ?: "Normal"
@@ -1565,7 +1565,7 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
                         
                         db.collection("users").document(uid).collection("monthlyStats").get()
                             .addOnSuccessListener { snap ->
-                                val incomeByKey = snap.documents.associate { it.id to (it.getDouble("income")) }
+                                val incomeByKey = snap.documents.associate { it.id to (it.getDouble("income") ?: it.getLong("income")?.toDouble()) }
                                 _monthlySummaries.value = summaries.map { s ->
                                     s.copy(income = incomeByKey["${s.year}-${s.month}"])
                                 }.sortedWith(compareByDescending<MonthSummary> { it.year }.thenByDescending { it.month })
@@ -1661,7 +1661,7 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
             val originalText = doc.getString("originalText") ?: ""
             val mood = doc.getString("mood") ?: "Normal"
             val aiInsight = doc.getString("aiInsight") ?: ""
-            val totalAmount = doc.getDouble("totalAmount") ?: 0.0
+            val totalAmount = doc.getDouble("totalAmount") ?: doc.getLong("totalAmount")?.toDouble() ?: 0.0
 
             val expensesRaw = doc.get("expenses") as? List<Map<String, Any>> ?: emptyList()
             val expensesList = expensesRaw.map {

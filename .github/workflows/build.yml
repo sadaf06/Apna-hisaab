@@ -70,7 +70,8 @@ jobs:
             printf "KEY_ALIAS=%s\n" "$KEY_ALIAS"
             printf "GEMINI_API_KEY=%s\n" "$GEMINI_API_KEY"
           } > local.properties
-          echo "local.properties created (secrets masked)"
+          printf "GEMINI_API_KEY=%s\n" "$GEMINI_API_KEY" > .env
+          echo "local.properties + .env created (secrets masked)"
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -110,5 +111,5 @@ jobs:
       - name: Cleanup secrets
         if: always()
         run: |
-          shred -u "$GITHUB_WORKSPACE/my-upload-key.jks" local.properties 2>/dev/null || rm -f "$GITHUB_WORKSPACE/my-upload-key.jks" local.properties
+          shred -u "$GITHUB_WORKSPACE/my-upload-key.jks" local.properties .env 2>/dev/null || rm -f "$GITHUB_WORKSPACE/my-upload-key.jks" local.properties .env
           echo "Secrets cleaned"
