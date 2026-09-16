@@ -8,6 +8,9 @@
 # 2. Keep App Data Models and Entities (crucial for Moshi, Room, and Firebase serialization)
 -keep class com.example.data.** { *; }
 -keep class com.example.data.local.** { *; }
+# API models (Gemini request/response) — Retrofit @Body / Moshi
+-keep class com.example.api.** { *; }
+
 
 # 3. Retrofit rules
 -dontwarn retrofit2.**
@@ -22,9 +25,12 @@
 # 5. Moshi rules (JSON parsing)
 -dontwarn com.squareup.moshi.**
 -keep class com.squareup.moshi.** { *; }
-# Keep Moshi's generated JsonAdapters
--keep class *JsonAdapter { *; }
+# Keep Moshi's generated JsonAdapters (** matches classes inside packages too)
+-keep class **JsonAdapter { *; }
 -keep class * { @com.squareup.moshi.JsonQualifier <fields>; }
+# Keep @JsonClass models + their constructors/fields so codegen adapters resolve
+-keepnames @com.squareup.moshi.JsonClass class *
+-keepclassmembers @com.squareup.moshi.JsonClass class * { <init>(...); <fields>; }
 
 # 6. Room Database rules
 -keep class * extends androidx.room.RoomDatabase
@@ -39,10 +45,7 @@
 -dontwarn dev.chrisbanes.haze.**
 -keep class dev.chrisbanes.haze.** { *; }
 
-# 9. Ktor rules (debugger detection via reflection - R8 strips these)
--dontwarn io.ktor.**
--keep class io.ktor.** { *; }
--keep class io.ktor.util.debug.** { *; }
-# Keep java.lang.management classes (required by Ktor IntellijIdeaDebugDetector)
--keep class java.lang.management.** { *; }
--dontwarn java.lang.management.**
+# Please add these rules to your existing keep rules in order to suppress warnings.
+# This is generated automatically by the Android Gradle plugin.
+-dontwarn java.lang.management.ManagementFactory
+-dontwarn java.lang.management.RuntimeMXBean
