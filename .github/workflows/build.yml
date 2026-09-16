@@ -82,8 +82,10 @@ jobs:
             printf "GEMINI_API_KEY=%s\n" "$GEMINI_API_KEY"
           } > local.properties
           printf "GEMINI_API_KEY=%s\n" "$GEMINI_API_KEY" > .env
-          echo ".env len: $(wc -c < .env) bytes"
-          echo "local.properties + .env created (secrets masked)"
+          cp .env app/.env
+          echo ".env len: $(wc -c < .env) bytes / app/.env len: $(wc -c < app/.env) bytes"
+          ls -lh .env app/.env local.properties
+          echo "local.properties + .env (root+app) created (secrets masked)"
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -123,5 +125,5 @@ jobs:
       - name: Cleanup secrets
         if: always()
         run: |
-          shred -u "$GITHUB_WORKSPACE/my-upload-key.jks" local.properties .env 2>/dev/null || rm -f "$GITHUB_WORKSPACE/my-upload-key.jks" local.properties .env
+          shred -u "$GITHUB_WORKSPACE/my-upload-key.jks" local.properties .env app/.env 2>/dev/null || rm -f "$GITHUB_WORKSPACE/my-upload-key.jks" local.properties .env app/.env
           echo "Secrets cleaned"
