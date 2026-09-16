@@ -33,7 +33,7 @@ android {
       // Support both env and local.properties, fallback to empty if not set (gradle requires non-null, so use "" and let signing fail clearly)
       val storePwd = System.getenv("STORE_PASSWORD") ?: localProps.getProperty("STORE_PASSWORD")
       val keyPwd = System.getenv("KEY_PASSWORD") ?: localProps.getProperty("KEY_PASSWORD")
-      val alias = System.getenv("KEY_ALIAS") ?: localProps.getProperty("KEY_ALIAS") ?: "upload"
+      val alias = System.getenv("KEY_ALIAS") ?: localProps.getProperty("KEY_ALIAS") ?: "apnahisaab"
       storeFile = file(keystorePath)
       // Only set if present - avoids null NPE during sync, build will fail with clear message if missing
       if (!storePwd.isNullOrEmpty()) storePassword = storePwd
