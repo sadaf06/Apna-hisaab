@@ -38,3 +38,11 @@
 # 8. dev.chrisbanes.haze (Haze glass effect library)
 -dontwarn dev.chrisbanes.haze.**
 -keep class dev.chrisbanes.haze.** { *; }
+
+# 9. Ktor rules (debugger detection via reflection - R8 strips these)
+-dontwarn io.ktor.**
+-keep class io.ktor.** { *; }
+-keep class io.ktor.util.debug.** { *; }
+# Keep java.lang.management classes (required by Ktor IntellijIdeaDebugDetector)
+-keep class java.lang.management.** { *; }
+-dontwarn java.lang.management.**
