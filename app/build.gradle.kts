@@ -27,11 +27,11 @@ android {
         val f = rootProject.file("local.properties")
         if (f.exists()) f.inputStream().use { load(it) }
       }
-      val keystorePath = System.getenv("KEYSTORE_PATH") ?: localProps.getProperty("KEYSTORE_PATH") ?: "${rootDir}/my-upload-key.jks"
+      val keystorePath = System.getenv("KEYSTORE_PATH") ?: localProps.get("KEYSTORE_PATH") as? String ?: "${rootDir}/my-upload-key.jks"
       storeFile = file(keystorePath)
-      storePassword = System.getenv("STORE_PASSWORD") ?: localProps.getProperty("STORE_PASSWORD")
-      keyAlias = System.getenv("KEY_ALIAS") ?: localProps.getProperty("KEY_ALIAS") ?: "upload"
-      keyPassword = System.getenv("KEY_PASSWORD") ?: localProps.getProperty("KEY_PASSWORD")
+      storePassword = System.getenv("STORE_PASSWORD") ?: localProps.get("STORE_PASSWORD") as? String
+      keyAlias = System.getenv("KEY_ALIAS") ?: localProps.get("KEY_ALIAS") as? String ?: "upload"
+      keyPassword = System.getenv("KEY_PASSWORD") ?: localProps.get("KEY_PASSWORD") as? String
     }
     create("debugConfig") {
       storeFile = file("${rootDir}/debug.keystore")
