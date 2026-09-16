@@ -301,8 +301,8 @@ fun BlurLockable(
                 Row(
                     modifier = Modifier
                         .clip(RoundedCornerShape(10.dp))
-                        .background(Color.White.copy(alpha = 0.12f))
-                        .border(1.dp, Color.White.copy(alpha = 0.20f), RoundedCornerShape(10.dp))
+                        .background(Palette.Glass.White12)
+                        .border(1.dp, Palette.Glass.White20, RoundedCornerShape(10.dp))
                         .padding(horizontal = 10.dp, vertical = 5.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(5.dp)

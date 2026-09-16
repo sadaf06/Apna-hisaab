@@ -20,12 +20,12 @@ private val DarkColorScheme =
     secondary = Palette.Teal,
     tertiary = Palette.Teal,
     background = Palette.BaseTop,
-    surface = Color(0xFF161B22),
-    onPrimary = Color.Black,
-    onSecondary = Color.Black,
+    surface = Palette.BaseTop,
+    onPrimary = Palette.OnAccent,
+    onSecondary = Palette.OnAccent,
     onBackground = Palette.TextPrimary,
     onSurface = Palette.TextPrimary,
-    onSurfaceVariant = Color(0xFF94A3B8)
+    onSurfaceVariant = Palette.TextSecondary
   )
 
 /** Retained for callers that still pass it as [MyApplicationTheme]'s darkTheme arg. App is dark-only. */

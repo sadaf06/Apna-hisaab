@@ -66,9 +66,9 @@ private val KAmber = Palette.Warning
 private val KText = Palette.TextPrimary
 private val KText2 = Palette.TextSecondary
 
-// WhatsApp brand colours — kept brand-correct, not themed.
-private val WhatsAppGreenDark = Color(0xFF128C7E)
-private val WhatsAppGreen = Color(0xFF25D366)
+// WhatsApp brand colours — via Palette.Brand (single source)
+private val WhatsAppGreenDark = com.example.ui.theme.Palette.Brand.WhatsAppDark
+private val WhatsAppGreen = com.example.ui.theme.Palette.Brand.WhatsApp
 
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
@@ -1751,11 +1751,11 @@ fun standardizeCategory(category: String): String {
 
 fun getMoodAttributes(mood: String): Triple<String, Color, String> {
     return when (mood.lowercase().trim()) {
-        "khush" -> Triple("😊", Color(0xFF34D399), "Khush")
-        "thaka" -> Triple("😴", Color(0xFFFBBF24), "Thaka")
-        "stressed" -> Triple("🤯", Color(0xFFFF8B8B), "Stressed")
-        "sad" -> Triple("😢", Color(0xFF60A5FA), "Sad")
-        else -> Triple("😐", Color(0xFF9AA3B2), "Normal")
+        "khush" -> Triple("😊", com.example.ui.theme.Palette.Success, "Khush")
+        "thaka" -> Triple("😴", com.example.ui.theme.Palette.Warning, "Thaka")
+        "stressed" -> Triple("🤯", com.example.ui.theme.Palette.Danger, "Stressed")
+        "sad" -> Triple("😢", com.example.ui.theme.Palette.Category.Padhai, "Sad")
+        else -> Triple("😐", com.example.ui.theme.Palette.Category.Sad, "Normal")
     }
 }
 

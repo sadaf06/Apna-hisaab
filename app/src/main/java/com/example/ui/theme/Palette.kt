@@ -62,9 +62,50 @@ object Palette {
     fun mood(key: String): Color = when (key.lowercase().trim()) {
         "khush" -> Purple
         "normal" -> Success
-        "thaka" -> Color(0xFF60A5FA)
-        "stressed" -> Color(0xFFFB923C)
-        "sad" -> Color(0xFF94A3B8)
+        "thaka" -> Category.Padhai
+        "stressed" -> Category.Masti
+        "sad" -> Category.Sad
         else -> Purple
+    }
+
+    // ---- Category colors (single source; no Color(0x...) outside this file) ----
+    object Category {
+        val Khana = Color(0xFF8B5CF6)
+        val GharKharch = Color(0xFF14B8A6)
+        val Rent = Color(0xFF4F46E5)
+        val EMI = Color(0xFF6366F1)
+        val Petrol = Color(0xFFF59E0B)
+        val Safar = Color(0xFF3B82F6)
+        val Masti = Color(0xFFEC4899)
+        val Shopping = Color(0xFF22C55E)
+        val Health = Color(0xFFDC2626)
+        val Padhai = Color(0xFF60A5FA)
+        val Personal = Color(0xFF10B981)
+        val Gift = Color(0xFFF43F5E)
+        val Savings = Color(0xFF22C55E)
+        val Pooja = Color(0xFFEAB308)
+        val Recharge = Color(0xFF0F172A)
+        val Other = Color(0xFFF97316)
+        val Sad = Color(0xFF94A3B8)
+    }
+
+    // ---- Glass translucents (use instead of Color.White/Black copy) ----
+    object Glass {
+        val White06 = Color(0x0FFFFFFF).copy(alpha = 0.06f) // ~6% white (approx 0x0F)
+        val White10 = Color.White.copy(alpha = 0.10f)
+        val White12 = Color.White.copy(alpha = 0.12f)
+        val White15 = Color.White.copy(alpha = 0.15f)
+        val White20 = Color.White.copy(alpha = 0.20f)
+        val White25 = Color.White.copy(alpha = 0.25f)
+        val White40 = Color.White.copy(alpha = 0.40f)
+        val Black28 = Color.Black.copy(alpha = 0.28f)
+        val Black30 = Color.Black.copy(alpha = 0.30f)
+        val Black40 = Color.Black.copy(alpha = 0.40f)
+    }
+
+    // ---- Brand greens (WhatsApp) ----
+    object Brand {
+        val WhatsApp = Color(0xFF25D366)
+        val WhatsAppDark = Color(0xFF128C7E)
     }
 }

@@ -75,6 +75,10 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      - name: Enforce Palette token gate
+        run: |
+          if grep -R "Color(0x" --include="*.kt" app/src | grep -v "Palette.kt" | grep -q .; then echo "::error::Raw Color(0x) outside Palette.kt"; grep -R "Color(0x" --include="*.kt" app/src | grep -v "Palette.kt"; exit 1; fi; echo "Palette gate passed"
+
       - name: Build Release APK
         run: ./gradlew :app:assembleRelease --stacktrace --no-daemon
 

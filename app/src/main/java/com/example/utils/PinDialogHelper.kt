@@ -34,11 +34,11 @@ import com.example.ui.theme.MyApplicationTheme
 import com.example.ui.theme.isAutoDarkTheme
 import kotlinx.coroutines.delay
 
-// ---- Refined Glass palette (matches Aaj screen PIN sheet) ----
-private val PMint = Color(0xFF5EEAD4)
-private val PCoral = Color(0xFFFF8B8B)
-private val PText = Color(0xFFEAF0FA)
-private val PText2 = Color(0xFF9AA3B2)
+// ---- Refined Glass palette — via Palette (single source) ----
+private val PMint = com.example.ui.theme.Palette.Teal
+private val PCoral = com.example.ui.theme.Palette.Danger
+private val PText = com.example.ui.theme.Palette.TextPrimary
+private val PText2 = com.example.ui.theme.Palette.TextSecondary
 
 /** The premium slate-glass container, rounded at the top — same vocabulary as Aaj's unlock sheet. */
 @androidx.compose.runtime.Composable
@@ -49,7 +49,7 @@ private fun PinSheetContainer(content: @androidx.compose.runtime.Composable Colu
             .fillMaxWidth()
             .navigationBarsPadding()
             .clip(shape)
-            .background(Color(0xFF1A1F2C).copy(alpha = 0.97f))
+            .background(com.example.ui.theme.Palette.BaseTop.copy(alpha = 0.97f))
             .border(width = 1.dp, color = Color.White.copy(alpha = 0.12f), shape = shape)
             .drawBehind {
                 // Luxury diagonal sheen top-left
@@ -447,7 +447,7 @@ object PinDialogHelper {
 
                     Surface(
                         shape = RoundedCornerShape(24.dp),
-                        color = Color(0xFF14171F),
+                        color = com.example.ui.theme.Palette.OnAccent,
                         tonalElevation = 6.dp,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -567,11 +567,11 @@ object PinDialogHelper {
                                     if (isLoading) {
                                         androidx.compose.material3.CircularProgressIndicator(
                                             modifier = Modifier.size(24.dp),
-                                            color = Color(0xFF14171F),
+                                            color = com.example.ui.theme.Palette.OnAccent,
                                             strokeWidth = 2.dp
                                         )
                                     } else {
-                                        Text("Reset Karein ➔", fontWeight = FontWeight.Bold, color = Color(0xFF14171F))
+                                        Text("Reset Karein ➔", fontWeight = FontWeight.Bold, color = com.example.ui.theme.Palette.OnAccent)
                                     }
                                 }
                             }

@@ -28,8 +28,8 @@ import androidx.compose.ui.unit.sp
 import com.example.R
 import com.example.ui.theme.Palette
 
-// Brand pink — no semantic token; kept as a named constant rather than a raw literal.
-private val AboutPink = Color(0xFFEC4899)
+// Brand pink — via Palette.Category.Masti (single source)
+private val AboutPink = Palette.Category.Masti
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
