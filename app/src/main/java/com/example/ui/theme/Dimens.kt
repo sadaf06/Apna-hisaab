@@ -44,6 +44,10 @@ object Dimens {
     // Common touch targets
     val iconButton = 40.dp
     val avatar = 44.dp
+
+    // Nav bar clearance (64dp bar + 18dp inset + 14dp breathing)
+    val navBarClearance = 96.dp
+    val micro = 2.dp
 }
 
 // Convenience pre-built shapes so callers don't re-allocate RoundedCornerShape everywhere.

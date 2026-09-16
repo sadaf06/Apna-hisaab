@@ -79,6 +79,14 @@ jobs:
         run: |
           if grep -R "Color(0x" --include="*.kt" app/src | grep -v "Palette.kt" | grep -q .; then echo "::error::Raw Color(0x) outside Palette.kt"; grep -R "Color(0x" --include="*.kt" app/src | grep -v "Palette.kt"; exit 1; fi; echo "Palette gate passed"
 
+      - name: Enforce Typography gate (warn-only for incrementally fixing 22 inline fontSize)
+        run: |
+          count=$(grep -R "fontSize =" --include="*.kt" app/src/main/java/com/example/ui/screens 2>/dev/null | wc -l); echo "Inline fontSize hits in screens: $count"; if [ "$count" -gt 0 ]; then echo "::warning::22 inline fontSize will be migrated to Type.kt tokens in 02-02"; grep -R "fontSize =" --include="*.kt" app/src/main/java/com/example/ui/screens | head -5; fi; echo "Typography gate checked"
+
+      - name: Enforce Spacing gate (warn-only until Wave 2-03 completes)
+        run: |
+          count=$(grep -R "140\.dp\|180\.dp" --include="*.kt" app/src 2>/dev/null | wc -l); echo "Raw 140/180dp hits: $count"; if [ "$count" -gt 0 ]; then echo "::warning::Raw 140/180dp will be migrated to Dimens.navBarClearance in 02-03"; grep -R "140\.dp\|180\.dp" --include="*.kt" app/src | head -5; fi; echo "Spacing gate checked"
+
       - name: Build Release APK
         run: ./gradlew :app:assembleRelease --stacktrace --no-daemon
 

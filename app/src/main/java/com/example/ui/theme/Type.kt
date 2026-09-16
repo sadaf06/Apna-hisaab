@@ -42,7 +42,7 @@ val BaseTypography = Typography(
     ),
     headlineMedium = TextStyle(
         fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.ExtraBold,
+        fontWeight = FontWeight.Bold,
         fontSize = 22.sp,
         lineHeight = 28.sp,
         letterSpacing = 0.sp,
@@ -57,7 +57,7 @@ val BaseTypography = Typography(
         platformStyle = emojiPlatformStyle
     ),
     titleMedium = TextStyle(
-        fontFamily = FontFamily.Default,
+        fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Bold,
         fontSize = 17.sp,
         lineHeight = 24.sp,
@@ -65,7 +65,7 @@ val BaseTypography = Typography(
         platformStyle = emojiPlatformStyle
     ),
     bodyLarge = TextStyle(
-        fontFamily = FontFamily.Default,
+        fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Medium, // bumped slightly from Normal for readability
         fontSize = 17.sp,               // larger text for prominent Hindi rendering
         lineHeight = 25.sp,
@@ -73,7 +73,7 @@ val BaseTypography = Typography(
         platformStyle = emojiPlatformStyle
     ),
     bodyMedium = TextStyle(
-        fontFamily = FontFamily.Default,
+        fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Normal,
         fontSize = 15.sp, // slightly larger
         lineHeight = 22.sp,
@@ -90,7 +90,7 @@ val BaseTypography = Typography(
     ),
     labelSmall = TextStyle(
         fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.SemiBold,
+        fontWeight = FontWeight.Bold,
         fontSize = 12.sp,
         lineHeight = 16.sp,
         letterSpacing = 0.5.sp,
@@ -99,3 +99,21 @@ val BaseTypography = Typography(
 )
 
 val Typography = BaseTypography
+
+// Extended tokens for hero amount and micro badges — use instead of inline copy(fontSize=)
+val displayHero = TextStyle(
+    fontFamily = FontFamily.SansSerif,
+    fontWeight = FontWeight.Black,
+    fontSize = 44.sp,
+    lineHeight = 52.sp,
+    letterSpacing = (-1.5).sp,
+    platformStyle = emojiPlatformStyle
+)
+val labelMicro = TextStyle(
+    fontFamily = FontFamily.SansSerif,
+    fontWeight = FontWeight.Bold,
+    fontSize = 10.sp,
+    lineHeight = 14.sp,
+    letterSpacing = 0.5.sp,
+    platformStyle = emojiPlatformStyle
+)
