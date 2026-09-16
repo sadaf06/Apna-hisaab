@@ -63,6 +63,17 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
+          # Validate all secrets are present (length only, never echo values)
+          echo "Secret lengths (0 = missing):"
+          echo "STORE_PASSWORD len: ${#STORE_PASSWORD}"
+          echo "KEY_PASSWORD len: ${#KEY_PASSWORD}"
+          echo "KEY_ALIAS len: ${#KEY_ALIAS}"
+          echo "GEMINI_API_KEY len: ${#GEMINI_API_KEY}"
+          if [ -z "$STORE_PASSWORD" ]; then echo "::error::STORE_PASSWORD secret missing"; exit 1; fi
+          if [ -z "$KEY_PASSWORD" ]; then echo "::error::KEY_PASSWORD secret missing"; exit 1; fi
+          if [ -z "$KEY_ALIAS" ]; then echo "::error::KEY_ALIAS secret missing (should be apnahisaab)"; exit 1; fi
+          if [ -z "$GEMINI_API_KEY" ]; then echo "::error::GEMINI_API_KEY secret missing - add in Settings > Secrets > Actions with your AI Studio key"; exit 1; fi
+          if [ "$GEMINI_API_KEY" = "MY_GEMINI_API_KEY" ]; then echo "::error::GEMINI_API_KEY is still placeholder MY_GEMINI_API_KEY - set real key"; exit 1; fi
           {
             echo "sdk.dir=$ANDROID_SDK_ROOT"
             printf "STORE_PASSWORD=%s\n" "$STORE_PASSWORD"
@@ -71,6 +82,7 @@ jobs:
             printf "GEMINI_API_KEY=%s\n" "$GEMINI_API_KEY"
           } > local.properties
           printf "GEMINI_API_KEY=%s\n" "$GEMINI_API_KEY" > .env
+          echo ".env len: $(wc -c < .env) bytes"
           echo "local.properties + .env created (secrets masked)"
 
       - name: Grant execute permission for gradlew
