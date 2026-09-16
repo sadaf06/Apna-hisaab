@@ -17,20 +17,6 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v4
-        with:
-          api-level: 34
-          build-tools: 34.0.0
-          ndk: false
-          cmake: false
-          cache: true
-
-      - name: Verify Android SDK Installation
-        run: |
-          ls -la $ANDROID_SDK_ROOT/cmdline-tools/ || true
-          $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --list 2>&1 | head -30 || true
-
       - name: Accept Android Licenses
         run: yes | $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --licenses || true
 
