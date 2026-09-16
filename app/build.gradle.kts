@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.kotlin.compose)
@@ -23,15 +25,20 @@ android {
 
   signingConfigs {
     create("release") {
-      val localProps = java.util.Properties().apply {
+      val localProps = Properties().apply {
         val f = rootProject.file("local.properties")
         if (f.exists()) f.inputStream().use { load(it) }
       }
-      val keystorePath = System.getenv("KEYSTORE_PATH") ?: localProps.get("KEYSTORE_PATH") as? String ?: "${rootDir}/my-upload-key.jks"
+      val keystorePath = System.getenv("KEYSTORE_PATH") ?: localProps.getProperty("KEYSTORE_PATH") ?: "${rootDir}/my-upload-key.jks"
+      // Support both env and local.properties, fallback to empty if not set (gradle requires non-null, so use "" and let signing fail clearly)
+      val storePwd = System.getenv("STORE_PASSWORD") ?: localProps.getProperty("STORE_PASSWORD")
+      val keyPwd = System.getenv("KEY_PASSWORD") ?: localProps.getProperty("KEY_PASSWORD")
+      val alias = System.getenv("KEY_ALIAS") ?: localProps.getProperty("KEY_ALIAS") ?: "upload"
       storeFile = file(keystorePath)
-      storePassword = System.getenv("STORE_PASSWORD") ?: localProps.get("STORE_PASSWORD") as? String
-      keyAlias = System.getenv("KEY_ALIAS") ?: localProps.get("KEY_ALIAS") as? String ?: "upload"
-      keyPassword = System.getenv("KEY_PASSWORD") ?: localProps.get("KEY_PASSWORD") as? String
+      // Only set if present - avoids null NPE during sync, build will fail with clear message if missing
+      if (!storePwd.isNullOrEmpty()) storePassword = storePwd
+      if (!keyPwd.isNullOrEmpty()) keyPassword = keyPwd
+      keyAlias = alias
     }
     create("debugConfig") {
       storeFile = file("${rootDir}/debug.keystore")
