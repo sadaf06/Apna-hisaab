@@ -20,11 +20,15 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v4
         with:
-          api-level: 36
-          build-tools: 36.1.0
+          api-level: 35
+          build-tools: 35.0.0
           ndk: false
           cmake: false
           cache: true
+
+      - name: Verify Android SDK Installation
+        run: |
+          $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --list 2>&1 | head -30 || true
 
       - name: Decode Keystore
         env:
