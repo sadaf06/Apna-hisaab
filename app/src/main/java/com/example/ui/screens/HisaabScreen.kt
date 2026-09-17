@@ -16,6 +16,8 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Menu
 import com.example.viewmodel.MonthSummary
 import com.example.viewmodel.MonthDetail
 import androidx.compose.material3.*
@@ -136,6 +138,7 @@ fun HisaabScreen(viewModel: ExpenseViewModel) {
     }
 
     var selectedTab by remember { mutableStateOf(0) } // 0 = Kahaniya, 1 = Sare Kharche
+    var expenseViewMode by remember { mutableStateOf(0) } // 0 = List (default), 1 = Category
     var expandedEntryId by remember { mutableStateOf<Int?>(null) }
     var entryToDelete by remember { mutableStateOf<Int?>(null) }
     var animatingDeleteId by remember { mutableStateOf<Int?>(null) }
@@ -990,12 +993,70 @@ fun HisaabScreen(viewModel: ExpenseViewModel) {
                     ) {
                         // Current month section
                         item {
-                            Text(
-                                text = "Is Mahine Ke Kharche",
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                color = Palette.Purple,
-                                modifier = Modifier.padding(vertical = Dimens.sm)
-                            )
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = Dimens.sm),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Is Mahine Ke Kharche",
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = Palette.Purple,
+                                    modifier = Modifier.weight(1f)
+                                )
+
+                                // Segmented toggle
+                                Row(
+                                    modifier = Modifier
+                                        .background(Palette.SurfaceInset, RoundedCornerShape(12.dp))
+                                        .border(Dimens.hairline, Palette.BorderSoft, RoundedCornerShape(12.dp))
+                                        .padding(4.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(2.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    // List mode (0)
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(
+                                                if (expenseViewMode == 0) Palette.Purple.copy(alpha = 0.2f)
+                                                else Color.Transparent
+                                            )
+                                            .clickable { expenseViewMode = 0 }
+                                            .padding(horizontal = Dimens.md, vertical = Dimens.xs),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.List,
+                                            contentDescription = "List View",
+                                            tint = if (expenseViewMode == 0) Palette.Purple else Palette.TextSecondary,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+
+                                    // Category mode (1)
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(
+                                                if (expenseViewMode == 1) Palette.Purple.copy(alpha = 0.2f)
+                                                else Color.Transparent
+                                            )
+                                            .clickable { expenseViewMode = 1 }
+                                            .padding(horizontal = Dimens.md, vertical = Dimens.xs),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Menu,
+                                            contentDescription = "Category View",
+                                            tint = if (expenseViewMode == 1) Palette.Purple else Palette.TextSecondary,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                }
+                            }
                         }
 
                         if (currentMonthExpenses.isNotEmpty()) {
@@ -1005,13 +1066,81 @@ fun HisaabScreen(viewModel: ExpenseViewModel) {
                                     contentPadding = PaddingValues(horizontal = Dimens.lg, vertical = Dimens.md)
                                 ) {
                                     Column {
-                                        currentMonthExpenses.forEachIndexed { index, expense ->
-                                            ExpenseRow(index = index, expense = expense)
-                                            if (index < currentMonthExpenses.lastIndex) {
-                                                HorizontalDivider(
-                                                    color = Palette.BorderSoft,
-                                                    thickness = Dimens.hairline
-                                                )
+                                        if (expenseViewMode == 0) {
+                                            // Flat list view (List mode)
+                                            currentMonthExpenses.forEachIndexed { index, expense ->
+                                                ExpenseRow(index = index, expense = expense)
+                                                if (index < currentMonthExpenses.lastIndex) {
+                                                    HorizontalDivider(
+                                                        color = Palette.BorderSoft,
+                                                        thickness = Dimens.hairline
+                                                    )
+                                                }
+                                            }
+                                        } else {
+                                            // Category grouped view (Category mode)
+                                            val groupedExpenses = currentMonthExpenses.groupBy { it.category }
+                                            val sortedCategories = groupedExpenses.map { (category, list) ->
+                                                val total = list.sumOf { it.amount }
+                                                Triple(category, total, list)
+                                            }.sortedByDescending { it.second }
+
+                                            sortedCategories.forEachIndexed { catIndex, (category, total, expenses) ->
+                                                val catInfo = com.example.data.CategoryConfig.getCategoryByName(category)
+
+                                                // Category Header Row
+                                                Row(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .padding(vertical = Dimens.md),
+                                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                                        // Circular emoji icon bubble (32dp)
+                                                        Box(
+                                                            modifier = Modifier
+                                                                .size(32.dp)
+                                                                .background(Palette.SurfaceInset, CircleShape)
+                                                                .border(Dimens.hairline, Palette.BorderSoft, CircleShape),
+                                                            contentAlignment = Alignment.Center
+                                                        ) {
+                                                            Text(text = catInfo.icon, fontSize = 16.sp)
+                                                        }
+                                                        Spacer(modifier = Modifier.width(Dimens.sm))
+                                                        Text(
+                                                            text = catInfo.name,
+                                                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                                            color = Palette.TextPrimary
+                                                        )
+                                                    }
+                                                    Text(
+                                                        text = "₹${total.toInt()}",
+                                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                                        color = Palette.Purple
+                                                    )
+                                                }
+
+                                                // Category Expenses List
+                                                expenses.forEachIndexed { expIndex, expense ->
+                                                    CategoryExpenseRow(index = expIndex, expense = expense)
+                                                    if (expIndex < expenses.lastIndex) {
+                                                        HorizontalDivider(
+                                                            color = Palette.BorderSoft.copy(alpha = 0.5f),
+                                                            thickness = Dimens.hairline,
+                                                            modifier = Modifier.padding(start = Dimens.xs)
+                                                        )
+                                                    }
+                                                }
+
+                                                // Divider between categories
+                                                if (catIndex < sortedCategories.lastIndex) {
+                                                    HorizontalDivider(
+                                                        color = Palette.BorderSoft,
+                                                        thickness = 1.dp,
+                                                        modifier = Modifier.padding(vertical = Dimens.sm)
+                                                    )
+                                                }
                                             }
                                         }
                                     }
@@ -1134,13 +1263,81 @@ fun HisaabScreen(viewModel: ExpenseViewModel) {
                                                                 contentPadding = PaddingValues(horizontal = Dimens.lg, vertical = Dimens.md)
                                                             ) {
                                                                 Column {
-                                                                    oldMonthExpenses.forEachIndexed { idx, expense ->
-                                                                        ExpenseRow(index = idx, expense = expense)
-                                                                        if (idx < oldMonthExpenses.lastIndex) {
-                                                                            HorizontalDivider(
-                                                                                color = Palette.BorderSoft,
-                                                                                thickness = Dimens.hairline
-                                                                            )
+                                                                    if (expenseViewMode == 0) {
+                                                                        // Flat list view
+                                                                        oldMonthExpenses.forEachIndexed { idx, expense ->
+                                                                            ExpenseRow(index = idx, expense = expense)
+                                                                            if (idx < oldMonthExpenses.lastIndex) {
+                                                                                HorizontalDivider(
+                                                                                    color = Palette.BorderSoft,
+                                                                                    thickness = Dimens.hairline
+                                                                                )
+                                                                            }
+                                                                        }
+                                                                    } else {
+                                                                        // Category grouped view
+                                                                        val groupedExpenses = oldMonthExpenses.groupBy { it.category }
+                                                                        val sortedCategories = groupedExpenses.map { (category, list) ->
+                                                                            val total = list.sumOf { it.amount }
+                                                                            Triple(category, total, list)
+                                                                        }.sortedByDescending { it.second }
+
+                                                                        sortedCategories.forEachIndexed { catIndex, (category, total, expenses) ->
+                                                                            val catInfo = com.example.data.CategoryConfig.getCategoryByName(category)
+
+                                                                            // Category Header Row
+                                                                            Row(
+                                                                                modifier = Modifier
+                                                                                    .fillMaxWidth()
+                                                                                    .padding(vertical = Dimens.md),
+                                                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                                                verticalAlignment = Alignment.CenterVertically
+                                                                            ) {
+                                                                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                                                                    // Circular emoji icon bubble (32dp)
+                                                                                    Box(
+                                                                                        modifier = Modifier
+                                                                                            .size(32.dp)
+                                                                                            .background(Palette.SurfaceInset, CircleShape)
+                                                                                            .border(Dimens.hairline, Palette.BorderSoft, CircleShape),
+                                                                                        contentAlignment = Alignment.Center
+                                                                                    ) {
+                                                                                        Text(text = catInfo.icon, fontSize = 16.sp)
+                                                                                    }
+                                                                                    Spacer(modifier = Modifier.width(Dimens.sm))
+                                                                                    Text(
+                                                                                        text = catInfo.name,
+                                                                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                                                                        color = Palette.TextPrimary
+                                                                                    )
+                                                                                }
+                                                                                Text(
+                                                                                    text = "₹${total.toInt()}",
+                                                                                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                                                                    color = Palette.Purple
+                                                                                )
+                                                                            }
+
+                                                                            // Category Expenses List
+                                                                            expenses.forEachIndexed { expIndex, expense ->
+                                                                                CategoryExpenseRow(index = expIndex, expense = expense)
+                                                                                if (expIndex < expenses.lastIndex) {
+                                                                                    HorizontalDivider(
+                                                                                        color = Palette.BorderSoft.copy(alpha = 0.5f),
+                                                                                        thickness = Dimens.hairline,
+                                                                                        modifier = Modifier.padding(start = Dimens.xs)
+                                                                                    )
+                                                                                }
+                                                                            }
+
+                                                                            // Divider between categories
+                                                                            if (catIndex < sortedCategories.lastIndex) {
+                                                                                HorizontalDivider(
+                                                                                    color = Palette.BorderSoft,
+                                                                                    thickness = 1.dp,
+                                                                                    modifier = Modifier.padding(vertical = Dimens.sm)
+                                                                                )
+                                                                            }
                                                                         }
                                                                     }
                                                                 }
@@ -1511,7 +1708,7 @@ fun ExpenseRow(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.weight(1f)
         ) {
-            val catInfo = com.example.data.CategoryConfig.getCategoryByName(expense.category)
+            val catInfo = com.example.data.CategoryConfig.getCategoryByName(expense.category, expense.description)
             val circleBg = Palette.SurfaceInset
 
             // Left circular icon bubble (40dp)
@@ -1555,6 +1752,46 @@ fun ExpenseRow(
                 color = amountColor
             )
         }
+    }
+}
+
+@Composable
+fun CategoryExpenseRow(
+    index: Int,
+    expense: HisaabExpense
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = Dimens.sm)
+            .animateCardStagger(index),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = expense.description,
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                color = Palette.TextPrimary
+            )
+            val dateStr = SimpleDateFormat("dd MMM, hh:mm a", Locale.getDefault()).format(Date(expense.timestamp))
+            Text(
+                text = dateStr,
+                style = MaterialTheme.typography.labelSmall.copy(color = Palette.TextSecondary)
+            )
+        }
+
+        val amountColor = when {
+            expense.amount <= 100.0 -> Palette.Success
+            expense.amount <= 500.0 -> Palette.Warning
+            else -> Palette.Danger
+        }
+
+        Text(
+            text = "₹${expense.amount.toInt()}",
+            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
+            color = amountColor
+        )
     }
 }
 
