@@ -5,9 +5,11 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -24,6 +26,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -33,6 +37,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.example.data.KhataParty
 import com.example.data.KhataTransaction
 import com.example.ui.components.GlassCard
@@ -601,6 +606,93 @@ fun KhataPartyItem(
     }
 }
 
+/**
+ * High-contrast, opaque dark glass dialog container.
+ * Features a full-screen dark scrim backdrop (75% opacity black) to prevent background visual bleed,
+ * and an opaque charcoal-navy modal container with a refined glass hairline border.
+ */
+@Composable
+fun KhataDialogSurface(
+    modifier: Modifier = Modifier,
+    onDismiss: () -> Unit,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false
+        )
+    ) {
+        // Deep cinematic dark scrim backdrop
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.78f))
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = onDismiss
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            val cardShape = Shapes.xl
+            Column(
+                modifier = modifier
+                    .widthIn(max = 480.dp)
+                    .fillMaxWidth()
+                    .padding(horizontal = Dimens.lg)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null
+                    ) { /* Absorb click inside dialog */ }
+                    .shadow(
+                        elevation = 28.dp,
+                        shape = cardShape,
+                        spotColor = Palette.Purple.copy(alpha = 0.40f),
+                        ambientColor = Color.Black
+                    )
+                    .clip(cardShape)
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(
+                                Color(0xFF161B26), // 100% solid dark charcoal-navy
+                                Color(0xFF0F131D)  // 100% solid deep base
+                            )
+                        ),
+                        cardShape
+                    )
+                    .border(
+                        BorderStroke(
+                            1.2.dp,
+                            Brush.linearGradient(
+                                listOf(
+                                    Palette.Purple.copy(alpha = 0.55f),
+                                    Palette.Teal.copy(alpha = 0.45f)
+                                )
+                            )
+                        ),
+                        cardShape
+                    )
+                    .drawBehind {
+                        // Glossy top specular highlight
+                        if (size.height > 0f) {
+                            val stop = (20.dp.toPx() / size.height).coerceIn(0f, 1f)
+                            drawRoundRect(
+                                brush = Brush.verticalGradient(
+                                    0f to Color.White.copy(alpha = 0.18f),
+                                    stop to Color.Transparent
+                                ),
+                                cornerRadius = androidx.compose.ui.geometry.CornerRadius(24.dp.toPx())
+                            )
+                        }
+                    }
+                    .padding(Dimens.xl),
+                content = content
+            )
+        }
+    }
+}
+
 @Composable
 fun AddPartyDialog(
     onDismiss: () -> Unit,
@@ -612,150 +704,164 @@ fun AddPartyDialog(
     var openingType by remember { mutableStateOf("GAVE") } // "GAVE" or "GOT"
     var errorMessage by remember { mutableStateOf("") }
 
-    Dialog(onDismissRequest = onDismiss) {
-        GlassCard(
+    KhataDialogSurface(onDismiss = onDismiss) {
+        Text(
+            text = "Naya Khata Kholein",
+            style = MaterialTheme.typography.titleLarge.copy(
+                fontWeight = FontWeight.Bold,
+                color = Palette.TextPrimary
+            )
+        )
+        Text(
+            text = "Grahak ya dost ka lena-dena shuru karein",
+            style = MaterialTheme.typography.bodySmall.copy(color = Palette.TextSecondary)
+        )
+        Spacer(modifier = Modifier.height(Dimens.md))
+
+        // Name field
+        OutlinedTextField(
+            value = name,
+            onValueChange = {
+                name = it
+                errorMessage = ""
+            },
+            label = { Text("Grahak / Dost ka Naam *") },
             modifier = Modifier.fillMaxWidth(),
-            highlight = true,
-            contentPadding = PaddingValues(Dimens.xl)
-        ) {
-            Text(
-                text = "Naya Khata Kholein",
-                style = MaterialTheme.typography.titleLarge.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = Palette.TextPrimary
-                )
-            )
-            Spacer(modifier = Modifier.height(Dimens.md))
+            singleLine = true,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Palette.Purple,
+                unfocusedBorderColor = Palette.BorderSoft,
+                focusedTextColor = Palette.TextPrimary,
+                unfocusedTextColor = Palette.TextPrimary,
+                focusedContainerColor = Color(0xFF0C0F17),
+                unfocusedContainerColor = Color(0xFF0C0F17),
+                focusedLabelColor = Palette.Purple,
+                unfocusedLabelColor = Palette.TextSecondary
+            ),
+            shape = Shapes.sm
+        )
 
-            // Name field
-            OutlinedTextField(
-                value = name,
-                onValueChange = {
-                    name = it
-                    errorMessage = ""
-                },
-                label = { Text("Grahak / Dost ka Naam *") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Palette.Purple,
-                    unfocusedBorderColor = Palette.BorderSoft,
-                    focusedTextColor = Palette.TextPrimary,
-                    unfocusedTextColor = Palette.TextPrimary
-                )
-            )
+        Spacer(modifier = Modifier.height(Dimens.sm))
 
+        // Phone field
+        OutlinedTextField(
+            value = phone,
+            onValueChange = { phone = it },
+            label = { Text("Mobile Number (Optional)") },
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+            singleLine = true,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Palette.Purple,
+                unfocusedBorderColor = Palette.BorderSoft,
+                focusedTextColor = Palette.TextPrimary,
+                unfocusedTextColor = Palette.TextPrimary,
+                focusedContainerColor = Color(0xFF0C0F17),
+                unfocusedContainerColor = Color(0xFF0C0F17),
+                focusedLabelColor = Palette.Purple,
+                unfocusedLabelColor = Palette.TextSecondary
+            ),
+            shape = Shapes.sm
+        )
+
+        Spacer(modifier = Modifier.height(Dimens.sm))
+
+        // Opening Balance
+        OutlinedTextField(
+            value = openingBalanceText,
+            onValueChange = { openingBalanceText = it },
+            label = { Text("Purana Udhaar / Hisaab (₹ Optional)") },
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            singleLine = true,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Palette.Purple,
+                unfocusedBorderColor = Palette.BorderSoft,
+                focusedTextColor = Palette.TextPrimary,
+                unfocusedTextColor = Palette.TextPrimary,
+                focusedContainerColor = Color(0xFF0C0F17),
+                unfocusedContainerColor = Color(0xFF0C0F17),
+                focusedLabelColor = Palette.Purple,
+                unfocusedLabelColor = Palette.TextSecondary
+            ),
+            shape = Shapes.sm
+        )
+
+        if ((openingBalanceText.toDoubleOrNull() ?: 0.0) > 0.0) {
             Spacer(modifier = Modifier.height(Dimens.sm))
-
-            // Phone field
-            OutlinedTextField(
-                value = phone,
-                onValueChange = { phone = it },
-                label = { Text("Mobile Number (Optional)") },
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Palette.Purple,
-                    unfocusedBorderColor = Palette.BorderSoft,
-                    focusedTextColor = Palette.TextPrimary,
-                    unfocusedTextColor = Palette.TextPrimary
-                )
-            )
-
-            Spacer(modifier = Modifier.height(Dimens.sm))
-
-            // Opening Balance
-            OutlinedTextField(
-                value = openingBalanceText,
-                onValueChange = { openingBalanceText = it },
-                label = { Text("Purana Udhaar / Hisaab (₹ Optional)") },
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Palette.Purple,
-                    unfocusedBorderColor = Palette.BorderSoft,
-                    focusedTextColor = Palette.TextPrimary,
-                    unfocusedTextColor = Palette.TextPrimary
-                )
-            )
-
-            if (openingBalanceText.toDoubleOrNull() ?: 0.0 > 0.0) {
-                Spacer(modifier = Modifier.height(Dimens.sm))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(Dimens.sm)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clip(Shapes.sm)
-                            .background(if (openingType == "GAVE") Palette.Danger.copy(alpha = 0.2f) else Palette.SurfaceInset)
-                            .border(1.dp, if (openingType == "GAVE") Palette.Danger else Palette.BorderSoft, Shapes.sm)
-                            .clickable { openingType = "GAVE" }
-                            .padding(vertical = Dimens.sm),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "Maine Diye (Lene)",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                color = if (openingType == "GAVE") Palette.Danger else Palette.TextSecondary,
-                                fontWeight = FontWeight.Bold
-                            )
-                        )
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clip(Shapes.sm)
-                            .background(if (openingType == "GOT") Palette.Teal.copy(alpha = 0.2f) else Palette.SurfaceInset)
-                            .border(1.dp, if (openingType == "GOT") Palette.Teal else Palette.BorderSoft, Shapes.sm)
-                            .clickable { openingType = "GOT" }
-                            .padding(vertical = Dimens.sm),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "Mujhe Mile (Dene)",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                color = if (openingType == "GOT") Palette.Teal else Palette.TextSecondary,
-                                fontWeight = FontWeight.Bold
-                            )
-                        )
-                    }
-                }
-            }
-
-            if (errorMessage.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(Dimens.xs))
-                Text(text = errorMessage, color = Palette.Danger, style = MaterialTheme.typography.bodySmall)
-            }
-
-            Spacer(modifier = Modifier.height(Dimens.lg))
-
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically
+                horizontalArrangement = Arrangement.spacedBy(Dimens.sm)
             ) {
-                TextButton(onClick = onDismiss) {
-                    Text("Cancel", color = Palette.TextSecondary)
-                }
-                Spacer(modifier = Modifier.width(Dimens.sm))
-                Button(
-                    onClick = {
-                        if (name.trim().isEmpty()) {
-                            errorMessage = "Naam likhna zaruri hai!"
-                        } else {
-                            val balance = openingBalanceText.toDoubleOrNull() ?: 0.0
-                            onAdd(name.trim(), phone.trim(), balance, openingType)
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = Palette.Purple)
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(Shapes.sm)
+                        .background(if (openingType == "GAVE") Palette.Danger.copy(alpha = 0.25f) else Color(0xFF0C0F17))
+                        .border(1.dp, if (openingType == "GAVE") Palette.Danger else Palette.BorderSoft, Shapes.sm)
+                        .clickable { openingType = "GAVE" }
+                        .padding(vertical = Dimens.sm),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text("Khata Kholein", color = Color.White, fontWeight = FontWeight.Bold)
+                    Text(
+                        text = "Maine Diye (Lene)",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = if (openingType == "GAVE") Palette.Danger else Palette.TextSecondary,
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
                 }
+
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(Shapes.sm)
+                        .background(if (openingType == "GOT") Palette.Teal.copy(alpha = 0.25f) else Color(0xFF0C0F17))
+                        .border(1.dp, if (openingType == "GOT") Palette.Teal else Palette.BorderSoft, Shapes.sm)
+                        .clickable { openingType = "GOT" }
+                        .padding(vertical = Dimens.sm),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Mujhe Mile (Dene)",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = if (openingType == "GOT") Palette.Teal else Palette.TextSecondary,
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
+                }
+            }
+        }
+
+        if (errorMessage.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(Dimens.xs))
+            Text(text = errorMessage, color = Palette.Danger, style = MaterialTheme.typography.bodySmall)
+        }
+
+        Spacer(modifier = Modifier.height(Dimens.lg))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel", color = Palette.TextSecondary)
+            }
+            Spacer(modifier = Modifier.width(Dimens.sm))
+            Button(
+                onClick = {
+                    if (name.trim().isEmpty()) {
+                        errorMessage = "Naam likhna zaruri hai!"
+                    } else {
+                        val balance = openingBalanceText.toDoubleOrNull() ?: 0.0
+                        onAdd(name.trim(), phone.trim(), balance, openingType)
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = Palette.Purple),
+                shape = Shapes.md
+            ) {
+                Text("Khata Kholein", color = Color.White, fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -776,99 +882,104 @@ fun AddTransactionDialog(
     val accentColor = if (isGave) Palette.Danger else Palette.Teal
     val titleText = if (isGave) "Maine Diye (Udhaar)" else "Mujhe Mile (Jama)"
 
-    Dialog(onDismissRequest = onDismiss) {
-        GlassCard(
-            modifier = Modifier.fillMaxWidth(),
-            highlight = true,
-            contentPadding = PaddingValues(Dimens.xl)
+    KhataDialogSurface(onDismiss = onDismiss) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(Dimens.sm)
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(Dimens.sm)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(10.dp)
-                        .background(accentColor, CircleShape)
-                )
-                Text(
-                    text = titleText,
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = Palette.TextPrimary
-                    )
-                )
-            }
+            Box(
+                modifier = Modifier
+                    .size(12.dp)
+                    .background(accentColor, CircleShape)
+            )
             Text(
-                text = "${party.name} ke hisaab mein",
-                style = MaterialTheme.typography.bodyMedium.copy(color = Palette.TextSecondary)
-            )
-
-            Spacer(modifier = Modifier.height(Dimens.md))
-
-            OutlinedTextField(
-                value = amountText,
-                onValueChange = {
-                    amountText = it
-                    errorMsg = ""
-                },
-                label = { Text("Rupaye (₹) *") },
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = accentColor,
-                    unfocusedBorderColor = Palette.BorderSoft,
-                    focusedTextColor = Palette.TextPrimary,
-                    unfocusedTextColor = Palette.TextPrimary
+                text = titleText,
+                style = MaterialTheme.typography.titleLarge.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = Palette.TextPrimary
                 )
             )
+        }
+        Text(
+            text = "${party.name} ke hisaab mein",
+            style = MaterialTheme.typography.bodyMedium.copy(color = Palette.TextSecondary)
+        )
 
-            Spacer(modifier = Modifier.height(Dimens.sm))
+        Spacer(modifier = Modifier.height(Dimens.md))
 
-            OutlinedTextField(
-                value = note,
-                onValueChange = { note = it },
-                label = { Text("Kharche ka kaaran / Note (e.g. Chai, Bill)") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = accentColor,
-                    unfocusedBorderColor = Palette.BorderSoft,
-                    focusedTextColor = Palette.TextPrimary,
-                    unfocusedTextColor = Palette.TextPrimary
-                )
-            )
+        OutlinedTextField(
+            value = amountText,
+            onValueChange = {
+                amountText = it
+                errorMsg = ""
+            },
+            label = { Text("Rupaye (₹) *") },
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            singleLine = true,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = accentColor,
+                unfocusedBorderColor = Palette.BorderSoft,
+                focusedTextColor = Palette.TextPrimary,
+                unfocusedTextColor = Palette.TextPrimary,
+                focusedContainerColor = Color(0xFF0C0F17),
+                unfocusedContainerColor = Color(0xFF0C0F17),
+                focusedLabelColor = accentColor,
+                unfocusedLabelColor = Palette.TextSecondary
+            ),
+            shape = Shapes.sm
+        )
 
-            if (errorMsg.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(Dimens.xs))
-                Text(text = errorMsg, color = Palette.Danger, style = MaterialTheme.typography.bodySmall)
+        Spacer(modifier = Modifier.height(Dimens.sm))
+
+        OutlinedTextField(
+            value = note,
+            onValueChange = { note = it },
+            label = { Text("Kharche ka kaaran / Note (e.g. Chai, Bill)") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = accentColor,
+                unfocusedBorderColor = Palette.BorderSoft,
+                focusedTextColor = Palette.TextPrimary,
+                unfocusedTextColor = Palette.TextPrimary,
+                focusedContainerColor = Color(0xFF0C0F17),
+                unfocusedContainerColor = Color(0xFF0C0F17),
+                focusedLabelColor = accentColor,
+                unfocusedLabelColor = Palette.TextSecondary
+            ),
+            shape = Shapes.sm
+        )
+
+        if (errorMsg.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(Dimens.xs))
+            Text(text = errorMsg, color = Palette.Danger, style = MaterialTheme.typography.bodySmall)
+        }
+
+        Spacer(modifier = Modifier.height(Dimens.lg))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel", color = Palette.TextSecondary)
             }
-
-            Spacer(modifier = Modifier.height(Dimens.lg))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically
+            Spacer(modifier = Modifier.width(Dimens.sm))
+            Button(
+                onClick = {
+                    val amt = amountText.toDoubleOrNull() ?: 0.0
+                    if (amt <= 0.0) {
+                        errorMsg = "Sahi amount daalein!"
+                    } else {
+                        onConfirm(amt, note)
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = accentColor),
+                shape = Shapes.md
             ) {
-                TextButton(onClick = onDismiss) {
-                    Text("Cancel", color = Palette.TextSecondary)
-                }
-                Spacer(modifier = Modifier.width(Dimens.sm))
-                Button(
-                    onClick = {
-                        val amt = amountText.toDoubleOrNull() ?: 0.0
-                        if (amt <= 0.0) {
-                            errorMsg = "Sahi amount daalein!"
-                        } else {
-                            onConfirm(amt, note)
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = accentColor)
-                ) {
-                    Text("Save Karein", color = Color.White, fontWeight = FontWeight.Bold)
-                }
+                Text("Save Karein", color = Color.White, fontWeight = FontWeight.Bold)
             }
         }
     }
@@ -890,248 +1001,242 @@ fun PartyLedgerDialog(
     var showDeleteConfirm by remember { mutableStateOf(false) }
     val dateFormat = remember { SimpleDateFormat("d MMM, hh:mm a", Locale("en", "IN")) }
 
-    Dialog(onDismissRequest = onDismiss) {
-        GlassCard(
+    KhataDialogSurface(
+        modifier = Modifier.fillMaxHeight(0.85f),
+        onDismiss = onDismiss
+    ) {
+        // Top Header: Name, Actions & Close
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = party.name,
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.Black,
+                        color = Palette.TextPrimary
+                    )
+                )
+                if (party.phone.isNotEmpty()) {
+                    Text(
+                        text = party.phone,
+                        style = MaterialTheme.typography.bodySmall.copy(color = Palette.TextSecondary)
+                    )
+                }
+            }
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                // WhatsApp Reminder Button
+                if (party.phone.isNotEmpty() || party.netBalance != 0.0) {
+                    IconButton(onClick = {
+                        val msg = if (party.netBalance > 0) {
+                            "Namaste ${party.name}, aapke paas Apna Khata ka ${currencyFormat.format(party.netBalance)} udhaar baki hai. Kripya samay milte hi hisaab kar dein."
+                        } else {
+                            "Namaste ${party.name}, aapka Apna Khata hisaab update ho gaya hai."
+                        }
+                        val intent = Intent(Intent.ACTION_VIEW).apply {
+                            data = Uri.parse("https://api.whatsapp.com/send?text=" + Uri.encode(msg) + (if (party.phone.isNotEmpty()) "&phone=${party.phone}" else ""))
+                        }
+                        try {
+                            context.startActivity(intent)
+                        } catch (e: Exception) {
+                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(Intent.EXTRA_TEXT, msg)
+                            }
+                            context.startActivity(Intent.createChooser(shareIntent, "Share Khata Reminder"))
+                        }
+                    }) {
+                        Icon(Icons.Outlined.Share, contentDescription = "Share", tint = Palette.Teal)
+                    }
+                }
+
+                // Delete party button
+                IconButton(onClick = { showDeleteConfirm = true }) {
+                    Icon(Icons.Outlined.Delete, contentDescription = "Delete", tint = Palette.Danger)
+                }
+
+                // Close button
+                IconButton(onClick = onDismiss) {
+                    Icon(Icons.Default.Close, contentDescription = "Close", tint = Palette.TextSecondary)
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(Dimens.sm))
+
+        // Current Balance Box (Solid high-contrast surface)
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .fillMaxHeight(0.85f),
-            highlight = true,
-            contentPadding = PaddingValues(Dimens.lg)
+                .clip(Shapes.md)
+                .background(Color(0xFF0C0F17))
+                .border(1.dp, Palette.BorderSoft, Shapes.md)
+                .padding(Dimens.md)
         ) {
-            // Top Header: Name, Actions & Close
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(modifier = Modifier.weight(1f)) {
+                Column {
                     Text(
-                        text = party.name,
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight.Black,
-                            color = Palette.TextPrimary
+                        text = "NET HISAAB",
+                        style = MaterialTheme.typography.labelSmall.copy(color = Palette.TextTertiary, fontWeight = FontWeight.Bold)
+                    )
+                    Text(
+                        text = currencyFormat.format(abs(party.netBalance)),
+                        style = MaterialTheme.typography.headlineSmall.copy(
+                            fontWeight = FontWeight.ExtraBold,
+                            color = when {
+                                party.netBalance > 0 -> Palette.Teal
+                                party.netBalance < 0 -> Palette.Danger
+                                else -> Palette.TextPrimary
+                            }
                         )
                     )
-                    if (party.phone.isNotEmpty()) {
-                        Text(
-                            text = party.phone,
-                            style = MaterialTheme.typography.bodySmall.copy(color = Palette.TextSecondary)
-                        )
-                    }
                 }
 
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    // WhatsApp Reminder Button
-                    if (party.phone.isNotEmpty() || party.netBalance != 0.0) {
-                        IconButton(onClick = {
-                            val msg = if (party.netBalance > 0) {
-                                "Namaste ${party.name}, aapke paas Apna Khata ka ${currencyFormat.format(party.netBalance)} udhaar baki hai. Kripya samay milte hi hisaab kar dein."
-                            } else {
-                                "Namaste ${party.name}, aapka Apna Khata hisaab update ho gaya hai."
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = when {
+                            party.netBalance > 0 -> "Aapko Lene Hain"
+                            party.netBalance < 0 -> "Aapko Dene Hain"
+                            else -> "Hisaab Barabar"
+                        },
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = when {
+                                party.netBalance > 0 -> Palette.Teal
+                                party.netBalance < 0 -> Palette.Danger
+                                else -> Palette.TextSecondary
                             }
-                            val intent = Intent(Intent.ACTION_VIEW).apply {
-                                data = Uri.parse("https://api.whatsapp.com/send?text=" + Uri.encode(msg) + (if (party.phone.isNotEmpty()) "&phone=${party.phone}" else ""))
-                            }
-                            try {
-                                context.startActivity(intent)
-                            } catch (e: Exception) {
-                                // fallback generic share
-                                val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                                    type = "text/plain"
-                                    putExtra(Intent.EXTRA_TEXT, msg)
-                                }
-                                context.startActivity(Intent.createChooser(shareIntent, "Share Khata Reminder"))
-                            }
-                        }) {
-                            Icon(Icons.Outlined.Share, contentDescription = "Share", tint = Palette.Teal)
-                        }
-                    }
-
-                    // Delete party button
-                    IconButton(onClick = { showDeleteConfirm = true }) {
-                        Icon(Icons.Outlined.Delete, contentDescription = "Delete", tint = Palette.Danger)
-                    }
-
-                    // Close button
-                    IconButton(onClick = onDismiss) {
-                        Icon(Icons.Default.Close, contentDescription = "Close", tint = Palette.TextSecondary)
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(Dimens.sm))
-
-            // Current Balance Box
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(Shapes.md)
-                    .background(Palette.SurfaceInset)
-                    .border(1.dp, Palette.BorderSoft, Shapes.md)
-                    .padding(Dimens.md)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            text = "NET HISAAB",
-                            style = MaterialTheme.typography.labelSmall.copy(color = Palette.TextTertiary, fontWeight = FontWeight.Bold)
                         )
-                        Text(
-                            text = currencyFormat.format(abs(party.netBalance)),
-                            style = MaterialTheme.typography.headlineSmall.copy(
-                                fontWeight = FontWeight.ExtraBold,
-                                color = when {
-                                    party.netBalance > 0 -> Palette.Teal
-                                    party.netBalance < 0 -> Palette.Danger
-                                    else -> Palette.TextPrimary
-                                }
-                            )
-                        )
-                    }
+                    )
 
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            text = when {
-                                party.netBalance > 0 -> "Aapko Lene Hain"
-                                party.netBalance < 0 -> "Aapko Dene Hain"
-                                else -> "Hisaab Barabar"
-                            },
-                            style = MaterialTheme.typography.labelMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = when {
-                                    party.netBalance > 0 -> Palette.Teal
-                                    party.netBalance < 0 -> Palette.Danger
-                                    else -> Palette.TextSecondary
-                                }
-                            )
-                        )
-
-                        if (party.netBalance != 0.0) {
-                            TextButton(
-                                onClick = onSettle,
-                                colors = ButtonDefaults.textButtonColors(contentColor = Palette.Purple),
-                                contentPadding = PaddingValues(0.dp)
-                            ) {
-                                Text("Barabar Karein", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
-                            }
+                    if (party.netBalance != 0.0) {
+                        TextButton(
+                            onClick = onSettle,
+                            colors = ButtonDefaults.textButtonColors(contentColor = Palette.Purple),
+                            contentPadding = PaddingValues(0.dp)
+                        ) {
+                            Text("Barabar Karein", style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold))
                         }
                     }
                 }
             }
+        }
 
-            Spacer(modifier = Modifier.height(Dimens.md))
-            Text(
-                text = "Transaction History (${transactions.size})",
-                style = MaterialTheme.typography.labelMedium.copy(
-                    fontWeight = FontWeight.Bold,
-                    color = Palette.TextSecondary
-                )
+        Spacer(modifier = Modifier.height(Dimens.md))
+        Text(
+            text = "Transaction History (${transactions.size})",
+            style = MaterialTheme.typography.labelMedium.copy(
+                fontWeight = FontWeight.Bold,
+                color = Palette.TextSecondary
             )
-            Spacer(modifier = Modifier.height(Dimens.xs))
+        )
+        Spacer(modifier = Modifier.height(Dimens.xs))
 
-            // Transactions LazyList
-            LazyColumn(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(Dimens.xs)
-            ) {
-                if (transactions.isEmpty()) {
-                    item {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = Dimens.xl),
-                            contentAlignment = Alignment.Center
-                        ) {
+        // Transactions LazyList
+        LazyColumn(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(Dimens.xs)
+        ) {
+            if (transactions.isEmpty()) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = Dimens.xl),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Abhi koi transaction nahi hai.",
+                            style = MaterialTheme.typography.bodySmall.copy(color = Palette.TextTertiary)
+                        )
+                    }
+                }
+            } else {
+                items(transactions, key = { it.id }) { txn ->
+                    val isGave = txn.type == "GAVE"
+                    val tagColor = if (isGave) Palette.Danger else Palette.Teal
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(Shapes.sm)
+                            .background(Color(0xFF131824))
+                            .border(Dimens.hairline, Palette.BorderSoft, Shapes.sm)
+                            .padding(horizontal = Dimens.md, vertical = Dimens.sm),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Abhi koi transaction nahi hai.",
-                                style = MaterialTheme.typography.bodySmall.copy(color = Palette.TextTertiary)
+                                text = txn.note.ifEmpty { if (isGave) "Maine diye" else "Mujhe mile" },
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Palette.TextPrimary
+                                )
+                            )
+                            Text(
+                                text = dateFormat.format(Date(txn.timestamp)),
+                                style = MaterialTheme.typography.labelSmall.copy(color = Palette.TextTertiary)
                             )
                         }
-                    }
-                } else {
-                    items(transactions, key = { it.id }) { txn ->
-                        val isGave = txn.type == "GAVE"
-                        val tagColor = if (isGave) Palette.Danger else Palette.Teal
 
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(Shapes.sm)
-                                .background(Palette.SurfaceInset)
-                                .border(Dimens.hairline, Palette.BorderSoft, Shapes.sm)
-                                .padding(horizontal = Dimens.md, vertical = Dimens.sm),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = txn.note.ifEmpty { if (isGave) "Maine diye" else "Mujhe mile" },
-                                    style = MaterialTheme.typography.bodyMedium.copy(
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = Palette.TextPrimary
-                                    )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = (if (isGave) "- " else "+ ") + currencyFormat.format(txn.amount),
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = tagColor
                                 )
-                                Text(
-                                    text = dateFormat.format(Date(txn.timestamp)),
-                                    style = MaterialTheme.typography.labelSmall.copy(color = Palette.TextTertiary)
+                            )
+                            IconButton(
+                                onClick = { onDeleteTxn(txn) },
+                                modifier = Modifier.size(28.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "Delete",
+                                    tint = Palette.TextTertiary,
+                                    modifier = Modifier.size(16.dp)
                                 )
-                            }
-
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    text = (if (isGave) "- " else "+ ") + currencyFormat.format(txn.amount),
-                                    style = MaterialTheme.typography.titleMedium.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        color = tagColor
-                                    )
-                                )
-                                IconButton(
-                                    onClick = { onDeleteTxn(txn) },
-                                    modifier = Modifier.size(28.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Close,
-                                        contentDescription = "Delete",
-                                        tint = Palette.TextTertiary,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                }
                             }
                         }
                     }
                 }
             }
+        }
 
-            Spacer(modifier = Modifier.height(Dimens.md))
+        Spacer(modifier = Modifier.height(Dimens.md))
 
-            // Action Buttons at Bottom
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(Dimens.md)
+        // Action Buttons at Bottom
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(Dimens.md)
+        ) {
+            Button(
+                onClick = onAddGave,
+                modifier = Modifier.weight(1f),
+                colors = ButtonDefaults.buttonColors(containerColor = Palette.Danger),
+                shape = Shapes.md
             ) {
-                Button(
-                    onClick = onAddGave,
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(containerColor = Palette.Danger),
-                    shape = Shapes.md
-                ) {
-                    Text("Maine Diye (-)", fontWeight = FontWeight.Bold, color = Color.White)
-                }
+                Text("Maine Diye (-)", fontWeight = FontWeight.Bold, color = Color.White)
+            }
 
-                Button(
-                    onClick = onAddGot,
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(containerColor = Palette.Teal),
-                    shape = Shapes.md
-                ) {
-                    Text("Mujhe Mile (+)", fontWeight = FontWeight.Bold, color = Color.White)
-                }
+            Button(
+                onClick = onAddGot,
+                modifier = Modifier.weight(1f),
+                colors = ButtonDefaults.buttonColors(containerColor = Palette.Teal),
+                shape = Shapes.md
+            ) {
+                Text("Mujhe Mile (+)", fontWeight = FontWeight.Bold, color = Color.White)
             }
         }
     }
@@ -1139,6 +1244,9 @@ fun PartyLedgerDialog(
     if (showDeleteConfirm) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
+            containerColor = Color(0xFF161B26),
+            titleContentColor = Palette.TextPrimary,
+            textContentColor = Palette.TextSecondary,
             title = { Text("Khata Delete Karein?", fontWeight = FontWeight.Bold) },
             text = { Text("${party.name} ka khata aur saari transactions delete ho jayengi.") },
             confirmButton = {
@@ -1154,7 +1262,7 @@ fun PartyLedgerDialog(
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteConfirm = false }) {
-                    Text("Cancel")
+                    Text("Cancel", color = Palette.TextSecondary)
                 }
             }
         )
