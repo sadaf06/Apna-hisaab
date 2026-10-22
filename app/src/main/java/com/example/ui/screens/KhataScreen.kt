@@ -655,8 +655,8 @@ fun KhataDialogSurface(
                     .background(
                         Brush.verticalGradient(
                             listOf(
-                                Color(0xFF161B26), // 100% solid dark charcoal-navy
-                                Color(0xFF0F131D)  // 100% solid deep base
+                                Palette.DialogSurfaceTop, // 100% solid dark charcoal-navy
+                                Palette.DialogSurfaceBottom  // 100% solid deep base
                             )
                         ),
                         cardShape
@@ -733,8 +733,8 @@ fun AddPartyDialog(
                 unfocusedBorderColor = Palette.BorderSoft,
                 focusedTextColor = Palette.TextPrimary,
                 unfocusedTextColor = Palette.TextPrimary,
-                focusedContainerColor = Color(0xFF0C0F17),
-                unfocusedContainerColor = Color(0xFF0C0F17),
+                focusedContainerColor = Palette.DialogInput,
+                unfocusedContainerColor = Palette.DialogInput,
                 focusedLabelColor = Palette.Purple,
                 unfocusedLabelColor = Palette.TextSecondary
             ),
@@ -756,8 +756,8 @@ fun AddPartyDialog(
                 unfocusedBorderColor = Palette.BorderSoft,
                 focusedTextColor = Palette.TextPrimary,
                 unfocusedTextColor = Palette.TextPrimary,
-                focusedContainerColor = Color(0xFF0C0F17),
-                unfocusedContainerColor = Color(0xFF0C0F17),
+                focusedContainerColor = Palette.DialogInput,
+                unfocusedContainerColor = Palette.DialogInput,
                 focusedLabelColor = Palette.Purple,
                 unfocusedLabelColor = Palette.TextSecondary
             ),
@@ -779,8 +779,8 @@ fun AddPartyDialog(
                 unfocusedBorderColor = Palette.BorderSoft,
                 focusedTextColor = Palette.TextPrimary,
                 unfocusedTextColor = Palette.TextPrimary,
-                focusedContainerColor = Color(0xFF0C0F17),
-                unfocusedContainerColor = Color(0xFF0C0F17),
+                focusedContainerColor = Palette.DialogInput,
+                unfocusedContainerColor = Palette.DialogInput,
                 focusedLabelColor = Palette.Purple,
                 unfocusedLabelColor = Palette.TextSecondary
             ),
@@ -797,7 +797,7 @@ fun AddPartyDialog(
                     modifier = Modifier
                         .weight(1f)
                         .clip(Shapes.sm)
-                        .background(if (openingType == "GAVE") Palette.Danger.copy(alpha = 0.25f) else Color(0xFF0C0F17))
+                        .background(if (openingType == "GAVE") Palette.Danger.copy(alpha = 0.25f) else Palette.DialogInput)
                         .border(1.dp, if (openingType == "GAVE") Palette.Danger else Palette.BorderSoft, Shapes.sm)
                         .clickable { openingType = "GAVE" }
                         .padding(vertical = Dimens.sm),
@@ -816,7 +816,7 @@ fun AddPartyDialog(
                     modifier = Modifier
                         .weight(1f)
                         .clip(Shapes.sm)
-                        .background(if (openingType == "GOT") Palette.Teal.copy(alpha = 0.25f) else Color(0xFF0C0F17))
+                        .background(if (openingType == "GOT") Palette.Teal.copy(alpha = 0.25f) else Palette.DialogInput)
                         .border(1.dp, if (openingType == "GOT") Palette.Teal else Palette.BorderSoft, Shapes.sm)
                         .clickable { openingType = "GOT" }
                         .padding(vertical = Dimens.sm),
@@ -922,8 +922,8 @@ fun AddTransactionDialog(
                 unfocusedBorderColor = Palette.BorderSoft,
                 focusedTextColor = Palette.TextPrimary,
                 unfocusedTextColor = Palette.TextPrimary,
-                focusedContainerColor = Color(0xFF0C0F17),
-                unfocusedContainerColor = Color(0xFF0C0F17),
+                focusedContainerColor = Palette.DialogInput,
+                unfocusedContainerColor = Palette.DialogInput,
                 focusedLabelColor = accentColor,
                 unfocusedLabelColor = Palette.TextSecondary
             ),
@@ -943,8 +943,8 @@ fun AddTransactionDialog(
                 unfocusedBorderColor = Palette.BorderSoft,
                 focusedTextColor = Palette.TextPrimary,
                 unfocusedTextColor = Palette.TextPrimary,
-                focusedContainerColor = Color(0xFF0C0F17),
-                unfocusedContainerColor = Color(0xFF0C0F17),
+                focusedContainerColor = Palette.DialogInput,
+                unfocusedContainerColor = Palette.DialogInput,
                 focusedLabelColor = accentColor,
                 unfocusedLabelColor = Palette.TextSecondary
             ),
@@ -1072,7 +1072,7 @@ fun PartyLedgerDialog(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(Shapes.md)
-                .background(Color(0xFF0C0F17))
+                .background(Palette.DialogInput)
                 .border(1.dp, Palette.BorderSoft, Shapes.md)
                 .padding(Dimens.md)
         ) {
@@ -1169,7 +1169,7 @@ fun PartyLedgerDialog(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(Shapes.sm)
-                            .background(Color(0xFF131824))
+                            .background(Palette.DialogItem)
                             .border(Dimens.hairline, Palette.BorderSoft, Shapes.sm)
                             .padding(horizontal = Dimens.md, vertical = Dimens.sm),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -1244,7 +1244,7 @@ fun PartyLedgerDialog(
     if (showDeleteConfirm) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
-            containerColor = Color(0xFF161B26),
+            containerColor = Palette.DialogSurfaceTop,
             titleContentColor = Palette.TextPrimary,
             textContentColor = Palette.TextSecondary,
             title = { Text("Khata Delete Karein?", fontWeight = FontWeight.Bold) },

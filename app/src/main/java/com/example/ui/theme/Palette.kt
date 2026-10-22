@@ -38,6 +38,11 @@ object Palette {
     val SurfaceLow = Color(0x0AFFFFFF)   // ~4% white
     // Inset elements inside a card (inputs, chips): darker than the card.
     val SurfaceInset = Color(0x40070A12) // translucent near-black
+    // ---- Opaque Modal & Dialog surfaces (used for popups to prevent background bleed) ----
+    val DialogSurfaceTop = Color(0xFF161B26)     // solid charcoal-navy
+    val DialogSurfaceBottom = Color(0xFF0F131D)  // solid deep navy-black
+    val DialogInput = Color(0xFF0C0F17)          // solid dark input background
+    val DialogItem = Color(0xFF131824)           // solid transaction row background
 
     // ---- Borders ----
     val BorderSoft = Color(0x14FFFFFF)   // ~8% white hairline
