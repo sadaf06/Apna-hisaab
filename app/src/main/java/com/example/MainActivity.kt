@@ -81,10 +81,11 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
-import com.example.ui.screens.SapnaScreen
+import com.example.ui.screens.KhataScreen
 import com.example.ui.screens.AboutScreen
 import com.example.ui.screens.AdminScreen
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.ReceiptLong
 
 class MainActivity : ComponentActivity() {
     override fun onStop() {
@@ -154,7 +155,7 @@ enum class Screen(val route: String, val title: String, val icon: @Composable ()
     Aaj("aaj", "Aaj", { Icon(Icons.Default.AddCircle, contentDescription = "Aaj", modifier = Modifier.size(22.dp)) }),
     Hisaab("hisaab", "Hisaab", { Icon(Icons.Default.List, contentDescription = "Hisaab", modifier = Modifier.size(22.dp)) }),
     Kahani("kahani", "Kahani", { Icon(Icons.Default.DateRange, contentDescription = "Kahani", modifier = Modifier.size(22.dp)) }),
-    Sapna("sapna", "Sapna", { Icon(Icons.Default.Star, contentDescription = "Sapna", modifier = Modifier.size(22.dp)) }),
+    Khata("khata", "Khata", { Icon(Icons.Default.ReceiptLong, contentDescription = "Khata", modifier = Modifier.size(22.dp)) }),
     Settings("settings", "Settings", { Icon(Icons.Default.Settings, contentDescription = "Settings", modifier = Modifier.size(22.dp)) })
 }
 
@@ -412,7 +413,7 @@ fun LiquidGlassNavBar(
           Icons.Default.Add to "Aaj",
           Icons.Default.List to "Hisaab",
           Icons.Default.DateRange to "Kahani",
-          Icons.Default.Star to "Sapna",
+          Icons.Default.ReceiptLong to "Khata",
           Icons.Default.Settings to "Settings"
       )
 
@@ -529,7 +530,7 @@ fun ApnaHisaabApp(expenseViewModel: ExpenseViewModel) {
         Screen.Aaj.route -> 0
         Screen.Hisaab.route -> 1
         Screen.Kahani.route -> 2
-        Screen.Sapna.route -> 3
+        Screen.Khata.route -> 3
         Screen.Settings.route, "about" -> 4
         else -> 0
     }
@@ -610,7 +611,7 @@ fun ApnaHisaabApp(expenseViewModel: ExpenseViewModel) {
                     composable(Screen.Aaj.route) { AajScreen(expenseViewModel, navController) }
                     composable(Screen.Hisaab.route) { HisaabScreen(expenseViewModel) }
                     composable(Screen.Kahani.route) { KahaniScreen(expenseViewModel) }
-                    composable(Screen.Sapna.route) { SapnaScreen(expenseViewModel) }
+                    composable(Screen.Khata.route) { KhataScreen(expenseViewModel) }
                     composable(Screen.Settings.route) { 
                         SettingsScreen(
                             viewModel = expenseViewModel,
@@ -642,7 +643,7 @@ fun ApnaHisaabApp(expenseViewModel: ExpenseViewModel) {
                                 0 -> Screen.Aaj.route
                                 1 -> Screen.Hisaab.route
                                 2 -> Screen.Kahani.route
-                                3 -> Screen.Sapna.route
+                                3 -> Screen.Khata.route
                                 4 -> Screen.Settings.route
                                 else -> Screen.Aaj.route
                             }

@@ -155,13 +155,22 @@ object GeminiClient {
             contents = listOf(Content(listOf(Part(prompt))))
         )
 
-        return try {
-            val response = callWithRetry { service.generateContent("gemini-1.5-flash", apiKey, request) }
-            val text = response.candidates?.firstOrNull()?.content?.parts?.firstOrNull()?.text?.trim()?.removeSurrounding("\"")
-            if (!text.isNullOrEmpty()) text else "Aaj ka hisaab dekhein!"
-        } catch (e: Exception) {
-            "Aaj ka hisaab dekhein!"
+        val greetingModels = listOf(
+            "gemini-flash-lite-latest",
+            "gemini-3.5-flash-lite",
+            "gemini-2.5-flash"
+        )
+
+        for (model in greetingModels) {
+            try {
+                val response = service.generateContent(model, apiKey, request)
+                val text = response.candidates?.firstOrNull()?.content?.parts?.firstOrNull()?.text?.trim()?.removeSurrounding("\"")
+                if (!text.isNullOrEmpty()) return text
+            } catch (e: Exception) {
+                continue
+            }
         }
+        return "Aaj ka hisaab dekhein!"
     }
 
     private suspend fun <T> callWithRetry(
@@ -250,11 +259,10 @@ object GeminiClient {
         )
 
         val models = listOf(
-            "gemini-3.1-flash-lite-preview", // 1. Fastest: Lite/Preview compressed model for ultra-low latency
-            "gemini-2.5-flash",              // 2. Extremely fast, optimized modern Flash model
-            "gemini-3.5-flash",              // 3. High-capability fast Flash model
-            "gemini-flash-latest",           // 4. Standard Flash fallback (Gemini 1.5 Flash)
-            "gemini-pro-latest"              // 5. Slowest: Pro reasoning model (fallback if Flash is busy/quota hit)
+            "gemini-flash-lite-latest", // 1. Fastest: Latest Flash-Lite model (~1.4s)
+            "gemini-3.5-flash-lite",    // 2. High-speed direct Flash-Lite fallback (~1.5s)
+            "gemini-2.5-flash",         // 3. Stable modern Flash model (~3.0s)
+            "gemini-3.6-flash"          // 4. Modern Flash capability fallback (~6.8s)
         )
         
         for (model in models) {
@@ -280,24 +288,16 @@ object GeminiClient {
                     }
                     val code = (e as? HttpException)?.code()
                     
-                    if (code == 404) {
-                        // Switch immediately
+                    if (code == 404 || code == 429) {
+                        // Switch immediately to next healthy model without delay
                         break 
                     } else if (code == 503) {
                         if (retries == 0) {
-                            delay(3000L)
+                            delay(500L)
                             retries++
                             continue
                         } else {
-                            break // Switch
-                        }
-                    } else if (code == 429) {
-                        if (retries == 0) {
-                            delay(10000L)
-                            retries++
-                            continue
-                        } else {
-                            break // Switch
+                            break // Switch to next model
                         }
                     } else {
                         // Other error, switch immediately
@@ -340,8 +340,21 @@ object GeminiClient {
         // User didn't specify summary should have fallback, but for consistency I should probably add it or keep it simple.
         // Let's use the first model for now to keep it simple, as requested only for story parsing.
         
-        val response = callWithRetry { service.generateContent("gemini-3.5-flash", apiKey, request) }
-        return response.candidates?.firstOrNull()?.content?.parts?.firstOrNull()?.text?.trim()
-            ?: "Is mahine ki koi dastaan abhi shuru nahi hui!"
+        val summaryModels = listOf(
+            "gemini-flash-lite-latest",
+            "gemini-3.5-flash-lite",
+            "gemini-2.5-flash"
+        )
+
+        for (model in summaryModels) {
+            try {
+                val response = service.generateContent(model, apiKey, request)
+                val text = response.candidates?.firstOrNull()?.content?.parts?.firstOrNull()?.text?.trim()
+                if (!text.isNullOrEmpty()) return text
+            } catch (e: Exception) {
+                continue
+            }
+        }
+        return "Is mahine ki koi dastaan abhi shuru nahi hui!"
     }
 }

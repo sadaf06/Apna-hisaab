@@ -14,7 +14,7 @@ Apna Hisaab ek Hinglish-first Android expense tracker hai jo natural language se
 - **🎯 Multi-Intent Detection** — Ek hi sentence mein multiple actions samajhta hai: *"100 ki chai pi aur 500 bachaye"* → expense + saving, dono alag se log honge.
 - **😊 Mood Tracking** — Har entry ke saath apna mood bhi capture hota hai — Khush, Normal, Thaka, Stressed, Sad.
 - **📖 Month ki Kahani** — Mahine ke end mein AI-generated warm, personal Hinglish summary — tumhare spending patterns aur moods ki kahani.
-- **🎯 Sapna (Goals)** — Apne savings goals set karo aur unhe complete hone pe track karo.
+- **📖 Khata (Khatabook)** — Grahakon aur dosto ke sath udhaar aur lena-dena track karo (Maine diye / Mujhe mile).
 - **🔔 Daily Reminders** — Roz raat 9 baje gentle nudge, taaki koi din hisaab likhna na bhoolo.
 - **🌙 Dark, Glassmorphic UI** — Modern liquid-glass navigation bar aur purple-teal themed dark interface.
 - **🔐 Secure & Synced** — Firebase Auth + Firestore ke saath data safe aur sync rehta hai.
@@ -28,7 +28,7 @@ Apna Hisaab ek Hinglish-first Android expense tracker hai jo natural language se
 | **Aaj** | Aaj ka kharcha/mood ek line mein likho |
 | **Hisaab** | Saare entries ki list, running total ke saath |
 | **Kahani** | Monthly AI-generated story + spending insights |
-| **Sapna** | Savings goals set aur track karo |
+| **Khata** | Udhaar, lena-dena aur customer ledger hisaab |
 | **Settings** | Profile, preferences, logout |
 
 ---

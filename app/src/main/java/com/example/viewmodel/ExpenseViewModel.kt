@@ -226,6 +226,8 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
     private var incomeListenerRegistration: com.google.firebase.firestore.ListenerRegistration? = null
     private var categoryBudgetsListenerRegistration: com.google.firebase.firestore.ListenerRegistration? = null
     private var goalsListenerRegistration: com.google.firebase.firestore.ListenerRegistration? = null
+    private var khataPartiesListenerRegistration: com.google.firebase.firestore.ListenerRegistration? = null
+    private var khataTransactionsListenerRegistration: com.google.firebase.firestore.ListenerRegistration? = null
 
     private var isAppInForeground = false
 
@@ -245,6 +247,12 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
 
     private val _goals = MutableStateFlow<List<com.example.data.Goal>>(emptyList())
     val goals: StateFlow<List<com.example.data.Goal>> = _goals.asStateFlow()
+
+    private val _khataParties = MutableStateFlow<List<com.example.data.KhataParty>>(emptyList())
+    val khataParties: StateFlow<List<com.example.data.KhataParty>> = _khataParties.asStateFlow()
+
+    private val _khataTransactions = MutableStateFlow<List<com.example.data.KhataTransaction>>(emptyList())
+    val khataTransactions: StateFlow<List<com.example.data.KhataTransaction>> = _khataTransactions.asStateFlow()
 
     private fun getFirebaseAuthLoginMethod(): String {
         val user = firebaseAuth.currentUser ?: return "anonymous"
@@ -438,6 +446,7 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
         fetchIncomeFromFirestore(uid)
         fetchCategoryBudgetsFromFirestore(uid)
         fetchGoalsFromFirestore(uid)
+        fetchKhataFromFirestore(uid)
 
         val db = FirebaseFirestore.getInstance()
         isSyncingFromFirestore.value = true
@@ -537,6 +546,10 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
         categoryBudgetsListenerRegistration = null
         goalsListenerRegistration?.remove()
         goalsListenerRegistration = null
+        khataPartiesListenerRegistration?.remove()
+        khataPartiesListenerRegistration = null
+        khataTransactionsListenerRegistration?.remove()
+        khataTransactionsListenerRegistration = null
     }
 
     override fun onCleared() {
@@ -1295,6 +1308,203 @@ class ExpenseViewModel(application: Application) : AndroidViewModel(application)
             .addOnSuccessListener {
                 fetchGoalsFromFirestore(uid)
             }
+    }
+
+    // ----------------------------------------------------
+    // KHATABOOK (LENA - DENA / UDHAAR LEDGER) METHODS
+    // ----------------------------------------------------
+
+    fun fetchKhataFromFirestore(uid: String) {
+        val db = FirebaseFirestore.getInstance()
+
+        khataPartiesListenerRegistration?.remove()
+        khataPartiesListenerRegistration = db.collection("users").document(uid).collection("khata_parties")
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    error.printStackTrace()
+                    return@addSnapshotListener
+                }
+                if (snapshot != null) {
+                    val list = snapshot.documents.map { doc ->
+                        com.example.data.KhataParty(
+                            id = doc.id,
+                            name = doc.getString("name") ?: "",
+                            phone = doc.getString("phone") ?: "",
+                            netBalance = doc.getDouble("netBalance") ?: doc.getLong("netBalance")?.toDouble() ?: 0.0,
+                            lastEntryNote = doc.getString("lastEntryNote") ?: "",
+                            createdAt = doc.getLong("createdAt") ?: System.currentTimeMillis(),
+                            updatedAt = doc.getLong("updatedAt") ?: System.currentTimeMillis()
+                        )
+                    }
+                    _khataParties.value = list.sortedByDescending { it.updatedAt }
+                }
+            }
+
+        khataTransactionsListenerRegistration?.remove()
+        khataTransactionsListenerRegistration = db.collection("users").document(uid).collection("khata_transactions")
+            .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
+            .limit(200)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    error.printStackTrace()
+                    return@addSnapshotListener
+                }
+                if (snapshot != null) {
+                    val list = snapshot.documents.map { doc ->
+                        com.example.data.KhataTransaction(
+                            id = doc.id,
+                            partyId = doc.getString("partyId") ?: "",
+                            partyName = doc.getString("partyName") ?: "",
+                            amount = doc.getDouble("amount") ?: doc.getLong("amount")?.toDouble() ?: 0.0,
+                            type = doc.getString("type") ?: "GAVE",
+                            note = doc.getString("note") ?: "",
+                            timestamp = doc.getLong("timestamp") ?: System.currentTimeMillis()
+                        )
+                    }
+                    _khataTransactions.value = list
+                }
+            }
+    }
+
+    fun addKhataParty(name: String, phone: String = "", openingBalance: Double = 0.0, openingType: String = "GAVE") {
+        val uid = _currentUserId.value
+        if (uid.isEmpty() || uid == "anonymous") return
+        val cleanName = name.trim()
+        if (cleanName.isEmpty()) return
+
+        val db = FirebaseFirestore.getInstance()
+        val partyRef = db.collection("users").document(uid).collection("khata_parties").document()
+
+        val initialBalance = if (openingBalance > 0) {
+            if (openingType == "GAVE") openingBalance else -openingBalance
+        } else 0.0
+
+        val initialNote = if (openingBalance > 0) {
+            if (openingType == "GAVE") "Shuruati udhaar (Maine diye)" else "Shuruati hisaab (Mujhe mile)"
+        } else "Naya khata shuru kiya"
+
+        val now = System.currentTimeMillis()
+        val partyData = hashMapOf(
+            "name" to cleanName,
+            "phone" to phone.trim(),
+            "netBalance" to initialBalance,
+            "lastEntryNote" to initialNote,
+            "createdAt" to now,
+            "updatedAt" to now
+        )
+
+        partyRef.set(partyData).addOnSuccessListener {
+            if (openingBalance > 0) {
+                val txnRef = db.collection("users").document(uid).collection("khata_transactions").document()
+                val txnData = hashMapOf(
+                    "partyId" to partyRef.id,
+                    "partyName" to cleanName,
+                    "amount" to openingBalance,
+                    "type" to openingType,
+                    "note" to initialNote,
+                    "timestamp" to now
+                )
+                txnRef.set(txnData)
+            }
+        }
+    }
+
+    fun addKhataTransaction(partyId: String, partyName: String, amount: Double, type: String, note: String) {
+        val uid = _currentUserId.value
+        if (uid.isEmpty() || uid == "anonymous") return
+        if (amount <= 0.0) return
+
+        val db = FirebaseFirestore.getInstance()
+        val now = System.currentTimeMillis()
+        val txnRef = db.collection("users").document(uid).collection("khata_transactions").document()
+        val cleanNote = note.trim()
+        val displayNote = if (cleanNote.isNotEmpty()) cleanNote else if (type == "GAVE") "Maine diye" else "Mujhe mile"
+
+        val txnData = hashMapOf(
+            "partyId" to partyId,
+            "partyName" to partyName,
+            "amount" to amount,
+            "type" to type,
+            "note" to displayNote,
+            "timestamp" to now
+        )
+
+        txnRef.set(txnData).addOnSuccessListener {
+            val balanceDelta = if (type == "GAVE") amount else -amount
+            val partyRef = db.collection("users").document(uid).collection("khata_parties").document(partyId)
+
+            db.runTransaction { transaction ->
+                val snapshot = transaction.get(partyRef)
+                if (snapshot.exists()) {
+                    val currentBal = snapshot.getDouble("netBalance") ?: snapshot.getLong("netBalance")?.toDouble() ?: 0.0
+                    transaction.update(
+                        partyRef,
+                        mapOf(
+                            "netBalance" to (currentBal + balanceDelta),
+                            "lastEntryNote" to displayNote,
+                            "updatedAt" to now
+                        )
+                    )
+                }
+            }
+        }
+    }
+
+    fun deleteKhataTransaction(txnId: String, partyId: String, amount: Double, type: String) {
+        val uid = _currentUserId.value
+        if (uid.isEmpty() || uid == "anonymous") return
+
+        val db = FirebaseFirestore.getInstance()
+        val txnRef = db.collection("users").document(uid).collection("khata_transactions").document(txnId)
+        val partyRef = db.collection("users").document(uid).collection("khata_parties").document(partyId)
+
+        val balanceDelta = if (type == "GAVE") -amount else amount
+
+        txnRef.delete().addOnSuccessListener {
+            db.runTransaction { transaction ->
+                val snapshot = transaction.get(partyRef)
+                if (snapshot.exists()) {
+                    val currentBal = snapshot.getDouble("netBalance") ?: snapshot.getLong("netBalance")?.toDouble() ?: 0.0
+                    transaction.update(partyRef, "netBalance", currentBal + balanceDelta, "updatedAt", System.currentTimeMillis())
+                }
+            }
+        }
+    }
+
+    fun deleteKhataParty(partyId: String) {
+        val uid = _currentUserId.value
+        if (uid.isEmpty() || uid == "anonymous") return
+
+        val db = FirebaseFirestore.getInstance()
+        db.collection("users").document(uid).collection("khata_parties").document(partyId).delete()
+
+        db.collection("users").document(uid).collection("khata_transactions")
+            .whereEqualTo("partyId", partyId).get()
+            .addOnSuccessListener { snapshot ->
+                for (doc in snapshot.documents) {
+                    doc.reference.delete()
+                }
+            }
+    }
+
+    fun settleKhataParty(partyId: String, partyName: String) {
+        val uid = _currentUserId.value
+        if (uid.isEmpty() || uid == "anonymous") return
+
+        val party = _khataParties.value.find { it.id == partyId } ?: return
+        val currentBal = party.netBalance
+        if (currentBal == 0.0) return
+
+        val type = if (currentBal > 0) "GOT" else "GAVE"
+        val settleAmount = kotlin.math.abs(currentBal)
+
+        addKhataTransaction(
+            partyId = partyId,
+            partyName = partyName,
+            amount = settleAmount,
+            type = type,
+            note = "Hisaab barabar kiya (Settled)"
+        )
     }
 
     fun updateExpenseItem(
