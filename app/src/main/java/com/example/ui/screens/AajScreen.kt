@@ -20,7 +20,9 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.ReceiptLong
 import androidx.compose.material.icons.filled.List
+import com.example.Screen
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -357,7 +359,7 @@ fun AajScreen(viewModel: ExpenseViewModel, navController: androidx.navigation.Na
     val diaryEntries by viewModel.allDiaryEntries.collectAsStateWithLifecycle()
     val currentMoodState by viewModel.currentMood.collectAsStateWithLifecycle()
     val monthlyBudget by viewModel.monthlyBudget.collectAsStateWithLifecycle()
-    val goals by viewModel.goals.collectAsStateWithLifecycle()
+    val khataParties by viewModel.khataParties.collectAsStateWithLifecycle()
 
     val streakCount = remember(diaryEntries) {
         if (diaryEntries.isEmpty()) {
@@ -415,8 +417,6 @@ fun AajScreen(viewModel: ExpenseViewModel, navController: androidx.navigation.Na
     val parsingState by viewModel.parsingState.collectAsStateWithLifecycle()
     val aiParsingError by viewModel.aiParsingError.collectAsStateWithLifecycle()
 
-    var showCelebrationGoal by remember { mutableStateOf<com.example.data.Goal?>(null) }
-
     LaunchedEffect(Unit) {
         viewModel.aiActionEvents.collect { event ->
             when (event) {
@@ -426,9 +426,7 @@ fun AajScreen(viewModel: ExpenseViewModel, navController: androidx.navigation.Na
                 is com.example.viewmodel.ExpenseViewModel.AiActionEvent.NavigateToSettings -> {
                     navController?.navigate("settings")
                 }
-                is com.example.viewmodel.ExpenseViewModel.AiActionEvent.ShowGoalCelebration -> {
-                    showCelebrationGoal = event.goal
-                }
+                else -> {}
             }
         }
     }
@@ -1238,83 +1236,75 @@ fun AajScreen(viewModel: ExpenseViewModel, navController: androidx.navigation.Na
                 }
             }
 
-            val activeGoal = goals.firstOrNull { !it.isCompleted }
-            if (activeGoal != null) {
-                val remaining = activeGoal.targetAmount - activeGoal.savedAmount
-                val progress = if (activeGoal.targetAmount > 0) (activeGoal.savedAmount / activeGoal.targetAmount).toFloat() else 0f
-                val daysRemaining = if (monthlyBudget > 0) {
-                    kotlin.math.ceil(remaining / (monthlyBudget / 30.0)).toInt()
-                } else 0
-                
+            val totalLene = khataParties.filter { it.netBalance > 0 }.sumOf { it.netBalance }
+            val totalDene = khataParties.filter { it.netBalance < 0 }.sumOf { kotlin.math.abs(it.netBalance) }
+            if (khataParties.isNotEmpty()) {
                 LiquidGlassCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .animateCardEntrance(70)
+                        .clickable { navController?.navigate(Screen.Khata.route) }
                 ) {
-                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Row(
-                            modifier = Modifier.fillMaxWidth(), 
-                            horizontalArrangement = Arrangement.SpaceBetween, 
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            Box(
+                                modifier = Modifier
+                                    .size(44.dp)
+                                    .clip(Shapes.sm)
+                                    .background(Palette.Purple.copy(alpha = 0.15f))
+                                    .border(1.dp, Palette.Purple.copy(alpha = 0.3f), Shapes.sm),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(44.dp)
-                                        .clip(Shapes.sm)
-                                        .background(Color.White.copy(alpha = 0.08f))
-                                        .border(1.dp, Color.White.copy(alpha = 0.12f), Shapes.sm),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(activeGoal.emoji, fontSize = 24.sp)
-                                }
-                                Column {
-                                    Text(
-                                        text = activeGoal.name, 
-                                        color = Palette.TextPrimary, 
-                                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
-                                    )
-                                    Text(
-                                        text = "Bachaye: ₹${activeGoal.savedAmount.toInt()} / ₹${activeGoal.targetAmount.toInt()}", 
-                                        color = Palette.TextSecondary, 
-                                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium)
-                                    )
-                                }
+                                Icon(
+                                    imageVector = Icons.Default.ReceiptLong,
+                                    contentDescription = null,
+                                    tint = Palette.Purple,
+                                    modifier = Modifier.size(24.dp)
+                                )
                             }
-                            Column(horizontalAlignment = Alignment.End) {
+                            Column {
                                 Text(
-                                    text = "${if(daysRemaining > 0) daysRemaining else "?"}", 
-                                    color = Palette.Teal, 
-                                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Black)
+                                    text = "Apna Khata (Udhaar)",
+                                    color = Palette.TextPrimary,
+                                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
                                 )
                                 Text(
-                                    text = "din bache", 
-                                    color = Palette.TextSecondary, 
-                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp)
+                                    text = "${khataParties.size} grahak / dost jude hain",
+                                    color = Palette.TextSecondary,
+                                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium)
                                 )
                             }
                         }
-                        
-                        var hasStarted by remember { mutableStateOf(false) }
-                        LaunchedEffect(Unit) { hasStarted = true }
-                        val animatedProgress by animateFloatAsState(
-                            targetValue = if (hasStarted) progress else 0f,
-                            animationSpec = tween(400, easing = LinearOutSlowInEasing),
-                            label = "sapna_progress"
-                        )
-                        
-                        LinearProgressIndicator(
-                            progress = { animatedProgress },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(5.dp)
-                                .clip(RoundedCornerShape(5.dp)),
-                            color = Palette.Teal, 
-                            trackColor = Color.White.copy(alpha = 0.1f)
-                        )
+                        Column(horizontalAlignment = Alignment.End) {
+                            if (totalLene > 0) {
+                                Text(
+                                    text = "₹${totalLene.toInt()} Lene",
+                                    color = Palette.Teal,
+                                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold)
+                                )
+                            }
+                            if (totalDene > 0) {
+                                Text(
+                                    text = "₹${totalDene.toInt()} Dene",
+                                    color = Palette.Danger,
+                                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold)
+                                )
+                            }
+                            if (totalLene == 0.0 && totalDene == 0.0) {
+                                Text(
+                                    text = "Hisaab Barabar",
+                                    color = Palette.TextSecondary,
+                                    style = MaterialTheme.typography.labelSmall
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -1738,12 +1728,6 @@ fun AajScreen(viewModel: ExpenseViewModel, navController: androidx.navigation.Na
             }
         }
 
-        if (showCelebrationGoal != null) {
-            GoalCelebrationDialog(
-                goal = showCelebrationGoal!!,
-                onDismiss = { showCelebrationGoal = null }
-            )
-        }
     }
 }
 
